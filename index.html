@@ -1,0 +1,3449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALS</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              800: '#1e3a5f',
+              900: '#142B49',
+              950: '#0c1b30',
+            },
+            enterprise: {
+              blue: '#2563EB',
+              teal: '#0F9D91',
+              green: '#16A34A',
+              amber: '#F59E0B',
+              red: '#DC2626',
+              bg: '#F8FAFC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+    .mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #F1F5F9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    .badge-pill { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 9999px; }
+    .leaflet-container { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] min-h-screen flex flex-col antialiased selection:bg-[#0F9D91] selection:text-white">
+
+  <!-- Shell Wrapper -->
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- ========================================================================= -->
+    <!-- 1. LEFT SIDEBAR NAVIGATION (Banking Style Deep Navy #142B49) -->
+    <!-- ========================================================================= -->
+    <aside class="w-64 bg-[#142B49] text-slate-300 flex flex-col flex-shrink-0 z-40 shadow-xl transition-all duration-300 border-r border-slate-800">
+      
+      <!-- Brand Identity -->
+      <div class="h-16 px-5 flex items-center gap-3 border-b border-white/10 bg-[#0c1b30]/60">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0F9D91] to-emerald-400 flex items-center justify-center text-white shadow-md shadow-[#0F9D91]/30 flex-shrink-0">
+          <i class="fa-solid fa-building-columns text-base"></i>
+        </div>
+        <div class="overflow-hidden flex items-center">
+          <span class="text-white font-black tracking-wider text-xl uppercase">ALS</span>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-1">
+        
+        <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 px-3 py-1">Core Operations</div>
+        
+        <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-white bg-white/10 shadow-sm transition group">
+          <i class="fa-solid fa-gauge-high text-sm w-4 text-[#0F9D91]"></i>
+          <span class="flex-1 text-left">Dashboard</span>
+        </button>
+
+        <button onclick="switchView('attendance')" id="nav-attendance" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-calendar-check text-sm w-4 text-slate-400 group-hover:text-emerald-400"></i>
+          <span class="flex-1 text-left">Daily Attendance</span>
+          <span id="badgeLiveCount" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">LIVE</span>
+        </button>
+
+        <button onclick="switchView('leaves')" id="nav-leaves" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-plane-departure text-sm w-4 text-slate-400 group-hover:text-blue-400"></i>
+          <span class="flex-1 text-left">Leave & Live Map</span>
+          <span id="badgePendingLeaves" class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-bold">2</span>
+        </button>
+
+        <button onclick="switchView('loans')" id="nav-loans" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-hand-holding-dollar text-sm w-4 text-slate-400 group-hover:text-amber-400"></i>
+          <span class="flex-1 text-left">Loan Management</span>
+          <span id="badgePendingLoans" class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-bold">1</span>
+        </button>
+
+        <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 px-3 pt-3 pb-1">Human Capital</div>
+
+        <button onclick="switchView('employees')" id="nav-employees" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-users-gear text-sm w-4 text-slate-400 group-hover:text-cyan-400"></i>
+          <span class="flex-1 text-left">Employee Roster</span>
+        </button>
+
+        <button onclick="switchView('payroll')" id="nav-payroll" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-money-check-dollar text-sm w-4 text-slate-400 group-hover:text-emerald-400"></i>
+          <span class="flex-1 text-left">Payroll & Slips</span>
+        </button>
+
+        <button onclick="switchView('holidays')" id="nav-holidays" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-calendar-days text-sm w-4 text-slate-400 group-hover:text-purple-400"></i>
+          <span class="flex-1 text-left">Holiday Calendar</span>
+        </button>
+
+        <button onclick="switchView('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-file-invoice-dollar text-sm w-4 text-slate-400 group-hover:text-indigo-400"></i>
+          <span class="flex-1 text-left">Employee Reports</span>
+        </button>
+
+        <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 px-3 pt-3 pb-1">Security & Logs</div>
+
+        <button onclick="switchView('notifications')" id="nav-notifications" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-bell text-sm w-4 text-slate-400 group-hover:text-rose-400"></i>
+          <span class="flex-1 text-left">Alerts & Activities</span>
+          <span id="badgeUnreadNotifs" class="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-bold">5</span>
+        </button>
+
+        <button onclick="switchView('security')" id="nav-security" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition group">
+          <i class="fa-solid fa-shield-halved text-sm w-4 text-slate-400 group-hover:text-teal-400"></i>
+          <span class="flex-1 text-left">Geofence & Security</span>
+        </button>
+
+      </nav>
+
+      <!-- Sidebar Footer (Logged-in User Status) -->
+      <div class="p-3 border-t border-white/10 bg-[#0c1b30]/40 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0F9D91] to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow">
+            SA
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-xs font-bold text-white truncate">Sajjad Ali</div>
+            <div class="text-[10px] text-teal-400 font-medium truncate">Lead Product Architect</div>
+          </div>
+        </div>
+        <a href="/app" target="_blank" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition" title="Open Mobile App Simulator">
+          <i class="fa-solid fa-mobile-screen text-xs"></i>
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- 2. MAIN WORKSPACE AREA -->
+    <!-- ========================================================================= -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F8FAFC]">
+
+      <!-- Top Header Bar -->
+      <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-30 shadow-xs">
+        
+        <!-- Left: Current Context Breadcrumb & Organization Info -->
+        <div class="flex items-center gap-3">
+          <h2 id="pageTitle" class="text-lg font-bold text-slate-800 tracking-tight">Dashboard</h2>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs select-none">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            LIVE DEMO
+          </span>
+        </div>
+
+        <!-- Right: Actions & Tools -->
+        <div class="flex items-center gap-3">
+          
+          <!-- Date Selector -->
+          <div class="relative flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+            <i class="fa-regular fa-calendar text-[#0F9D91]"></i>
+            <input type="date" id="globalDateInput" value="2026-11-19" onchange="onGlobalDateChange(this.value)" class="bg-transparent border-0 text-xs font-semibold text-slate-700 focus:outline-hidden cursor-pointer" />
+          </div>
+
+          <!-- Live Auto-refresh Indicator / Manual Refresh -->
+          <button onclick="refreshCurrentView()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition active:scale-95 shadow-2xs" title="Refresh Live Data">
+            <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-[#0F9D91]"></i>
+            <span class="hidden sm:inline">Refresh</span>
+          </button>
+
+          <!-- Notification Drawer Trigger -->
+          <button onclick="switchView('notifications')" class="relative w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 hover:text-slate-900 transition shadow-2xs">
+            <i class="fa-regular fa-bell"></i>
+            <span id="headerNotifDot" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+          </button>
+
+          <!-- Launch Mobile Simulator Button -->
+          <a href="/app" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#0F9D91] to-teal-600 hover:from-teal-700 hover:to-teal-800 text-white text-xs font-bold transition shadow-sm shadow-[#0F9D91]/20 active:scale-95">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>Mobile App</span>
+          </a>
+
+        </div>
+
+      </header>
+
+      <!-- Scrollable Content Canvas -->
+      <div id="contentCanvas" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 1: DASHBOARD VIEW -->
+        <!-- ===================================================================== -->
+        <section id="view-dashboard" class="view-panel space-y-6">
+
+          <!-- Welcome & Actions Banner (Clean & Proportional) -->
+          <div class="bg-gradient-to-r from-[#142B49] via-[#1a375d] to-[#0F9D91] rounded-2xl px-6 py-4 text-white shadow-md relative overflow-hidden">
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-teal-300 text-lg border border-white/15 shrink-0 shadow-inner">
+                  <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <h3 class="text-lg sm:text-xl font-black tracking-tight text-white leading-tight">Workforce Intelligence & HR Operations</h3>
+              </div>
+              <div class="flex items-center gap-2.5 shrink-0">
+                <button onclick="openModalAddEmployee()" class="px-3.5 py-2 bg-white text-[#142B49] hover:bg-slate-100 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                  <i class="fa-solid fa-user-plus text-[#0F9D91]"></i>
+                  <span>New Employee</span>
+                </button>
+                <button onclick="navigateToRecordGallery('ALL')" class="px-3.5 py-2 bg-[#0F9D91] hover:bg-teal-600 text-white rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                  <i class="fa-solid fa-table-list"></i>
+                  <span>Record Gallery</span>
+                </button>
+                <button onclick="switchView('attendance')" class="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5 active:scale-95">
+                  <i class="fa-solid fa-calendar-check text-teal-300"></i>
+                  <span>Live Console</span>
+                </button>
+              </div>
+            </div>
+            <!-- Decorative circle overlay -->
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/5 pointer-events-none"></div>
+          </div>
+
+          <!-- 8 BANKING-GRADE KPI SUMMARY CARDS (Clickable with smooth navigation to Record Gallery) -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Card 1: Total Employees -->
+            <div onclick="navigateToRecordGallery('ALL')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-blue-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view all employee records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-blue-600 transition">Total Headcount</span>
+                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiTotalEmployees" class="text-2xl font-black text-slate-800 mono-num">10</span>
+                <span class="text-[11px] font-semibold text-emerald-600 flex items-center"><i class="fa-solid fa-arrow-trend-up mr-0.5"></i>100% active</span>
+              </div>
+            </div>
+
+            <!-- Card 2: Present Today -->
+            <div onclick="navigateToRecordGallery('PRESENT')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-emerald-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Present Today records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-emerald-600 transition">Present Today</span>
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs group-hover:bg-emerald-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-user-check"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiPresentToday" class="text-2xl font-black text-emerald-600 mono-num">5</span>
+                <span id="kpiPresentRate" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">50% rate</span>
+              </div>
+            </div>
+
+            <!-- Card 3: Late Arrivals -->
+            <div onclick="navigateToRecordGallery('LATE')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-amber-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Late Arrivals records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-amber-600 transition">Late Arrivals</span>
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xs group-hover:bg-amber-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiLateArrivals" class="text-2xl font-black text-amber-600 mono-num">2</span>
+                <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded">> 9:15 AM</span>
+              </div>
+            </div>
+
+            <!-- Card 4: Absent Today -->
+            <div onclick="navigateToRecordGallery('ABSENT')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-rose-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Absent records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-rose-600 transition">Absent Today</span>
+                <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xs group-hover:bg-rose-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-user-xmark"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiAbsentToday" class="text-2xl font-black text-rose-600 mono-num">3</span>
+                <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded">Past 11:00 AM</span>
+              </div>
+            </div>
+
+            <!-- Card 5: Employees On Leave -->
+            <div onclick="navigateToRecordGallery('ON_LEAVE')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-blue-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view On Leave records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-blue-600 transition">On Approved Leave</span>
+                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-umbrella-beach"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiOnLeaveToday" class="text-2xl font-black text-blue-600 mono-num">2</span>
+                <span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">Authorized</span>
+              </div>
+            </div>
+
+            <!-- Card 6: Pending Leaves -->
+            <div onclick="navigateToRecordGallery('PENDING_LEAVE')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-purple-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Pending Leaves in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-purple-600 transition">Pending Leave Req.</span>
+                <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xs group-hover:bg-purple-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-envelope-open-text"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiPendingLeaves" class="text-2xl font-black text-purple-600 mono-num">2</span>
+                <button onclick="event.stopPropagation(); switchView('leaves')" class="text-[11px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-1.5 py-0.2 rounded transition">Review &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Card 7: Pending Loans -->
+            <div onclick="navigateToRecordGallery('PENDING_LOAN')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-indigo-400 active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Pending Loans in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-indigo-600 transition">Pending Loan Apps</span>
+                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs group-hover:bg-indigo-600 group-hover:text-white transition">
+                  <i class="fa-solid fa-coins"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiPendingLoans" class="text-2xl font-black text-indigo-600 mono-num">1</span>
+                <button onclick="event.stopPropagation(); switchView('loans')" class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.2 rounded transition">Review &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Card 8: Total Monthly Payroll -->
+            <div onclick="navigateToRecordGallery('PAYROLL')" class="cursor-pointer group bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-lg hover:-translate-y-1 hover:border-[#0F9D91] active:scale-[0.98] transition-all duration-200 relative overflow-hidden" title="Click to view Payroll records in Record Gallery">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-[#0F9D91] transition">Monthly Payroll</span>
+                <div class="w-8 h-8 rounded-xl bg-teal-50 text-[#0F9D91] flex items-center justify-center text-xs group-hover:bg-[#0F9D91] group-hover:text-white transition">
+                  <i class="fa-solid fa-receipt"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="kpiTotalPayroll" class="text-xl font-black text-[#142B49] mono-num">PKR 2.84M</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- VISUALIZATIONS ROW 1: Daily Attendance Overview & Monthly Trends -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Daily Attendance Donut Chart Card -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs flex flex-col">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="text-sm font-bold text-slate-800">Daily Attendance Breakdown</h4>
+                  <p class="text-[11px] text-slate-400">Status proportion for today</p>
+                </div>
+                <span class="text-[10px] bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded">19 Nov</span>
+              </div>
+
+              <!-- SVG Donut Chart -->
+              <div class="py-4 flex flex-col items-center justify-center flex-1">
+                <div class="relative w-44 h-44">
+                  <svg id="dashboardDonutSvg" viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+                    <!-- Populated dynamically -->
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span id="donutCenterTotal" class="text-2xl font-black text-slate-800 mono-num">10</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Total Staff</span>
+                  </div>
+                </div>
+
+                <!-- Color coded legend -->
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-4 text-xs font-medium w-full">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-[#16A34A]"></span>
+                    <span class="text-slate-600">Present</span>
+                    <span id="donutPresentVal" class="ml-auto font-bold text-slate-800 mono-num">5</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-[#F59E0B]"></span>
+                    <span class="text-slate-600">Late</span>
+                    <span id="donutLateVal" class="ml-auto font-bold text-slate-800 mono-num">2</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-[#DC2626]"></span>
+                    <span class="text-slate-600">Absent</span>
+                    <span id="donutAbsentVal" class="ml-auto font-bold text-slate-800 mono-num">3</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-[#2563EB]"></span>
+                    <span class="text-slate-600">On Leave</span>
+                    <span id="donutLeaveVal" class="ml-auto font-bold text-slate-800 mono-num">2</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Monthly Attendance Trends (SVG Bar Chart) -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs lg:col-span-2 flex flex-col">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="text-sm font-bold text-slate-800">Monthly Attendance Trends</h4>
+                  <p class="text-[11px] text-slate-400">Punctuality vs Absence over past 6 months</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                  <span class="flex items-center gap-1.5 text-slate-600 font-medium">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-[#16A34A]"></span> Present Avg
+                  </span>
+                  <span class="flex items-center gap-1.5 text-slate-600 font-medium">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-[#F59E0B]"></span> Late Avg
+                  </span>
+                  <span class="flex items-center gap-1.5 text-slate-600 font-medium">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-[#DC2626]"></span> Absent Avg
+                  </span>
+                </div>
+              </div>
+
+              <!-- Monthly Trend Bars Container -->
+              <div id="monthlyTrendsContainer" class="flex-1 flex items-end justify-between gap-3 pt-6 pb-2 px-2">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- VISUALIZATIONS ROW 2: Department Breakdown, Upcoming Holidays & Recent Activities -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Department Attendance Breakdown -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <h4 class="text-sm font-bold text-slate-800">Department Attendance</h4>
+                <span class="text-[10px] text-slate-400 font-medium">Today</span>
+              </div>
+              <div id="deptAttendanceList" class="space-y-3.5">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Upcoming Public Holidays -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <h4 class="text-sm font-bold text-slate-800">Upcoming Public Holidays</h4>
+                <button onclick="switchView('holidays')" class="text-xs text-[#0F9D91] hover:underline font-semibold">View All &rarr;</button>
+              </div>
+              <div id="upcomingHolidaysList" class="space-y-2.5">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Recent Employee Activities Stream -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <h4 class="text-sm font-bold text-slate-800">Recent Activity Stream</h4>
+                <button onclick="switchView('notifications')" class="text-xs text-[#0F9D91] hover:underline font-semibold">All Alerts &rarr;</button>
+              </div>
+              <div id="recentActivityList" class="space-y-3">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ===================================================================== -->
+          <!-- RECORD GALLERY SECTION: Interactive Employee & Attendance Directory -->
+          <!-- ===================================================================== -->
+          <div id="recordGallerySection" class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-4 scroll-mt-6 transition-all duration-300">
+            
+            <!-- Gallery Header -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#0F9D91] flex items-center justify-center text-lg border border-teal-100 shrink-0 shadow-2xs">
+                  <i class="fa-solid fa-address-book"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-slate-800 tracking-tight">Workforce Record Gallery</h3>
+                </div>
+              </div>
+
+              <!-- Controls: Category Dropdown, Search, View Switcher, Jump to Console -->
+              <div class="flex flex-wrap items-center gap-2.5">
+                
+                <!-- Category Filter Dropdown (Present, Late, Absent, Leave, Loans, Payroll) -->
+                <div class="relative">
+                  <select id="galleryCategoryDropdown" onchange="applyRecordGalleryFilter(this.value, false)" class="appearance-none text-xs bg-slate-50 border border-slate-300 font-bold text-slate-800 rounded-xl pl-3 pr-8 py-2 focus:ring-2 focus:ring-[#0F9D91] focus:outline-hidden cursor-pointer shadow-2xs transition hover:border-[#0F9D91]">
+                    <option value="ALL">All Staff</option>
+                    <option value="PRESENT">Present Today (4)</option>
+                    <option value="LATE">Late Arrivals (1)</option>
+                    <option value="ABSENT">Absent Today (3)</option>
+                    <option value="ON_LEAVE">On Leave (2)</option>
+                    <option value="PENDING_LEAVE">Pending Leaves (2)</option>
+                    <option value="PENDING_LOAN">Pending Loans (2)</option>
+                    <option value="PAYROLL">Payroll Disbursals (11)</option>
+                  </select>
+                  <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] absolute right-3 top-3 pointer-events-none"></i>
+                </div>
+
+                <!-- Search Box -->
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                  <input type="text" id="gallerySearchInput" onkeyup="filterRecordGallery()" placeholder="Search name, code, dept..." class="text-xs bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 font-semibold text-slate-700 focus:ring-2 focus:ring-[#0F9D91] focus:outline-hidden w-44 sm:w-52 transition" />
+                </div>
+
+                <!-- View Mode Toggle: Grid Cards vs Table -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
+                  <button id="galleryViewGridBtn" onclick="setGalleryViewMode('grid')" class="px-2.5 py-1.5 rounded-lg bg-white text-slate-800 shadow-2xs transition" title="Cards View">
+                    <i class="fa-solid fa-grip mr-1"></i>Cards
+                  </button>
+                  <button id="galleryViewTableBtn" onclick="setGalleryViewMode('table')" class="px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition" title="Table View">
+                    <i class="fa-solid fa-list mr-1"></i>Table
+                  </button>
+                </div>
+
+                <!-- Full Module Jump Button -->
+                <button id="galleryFullModuleBtn" onclick="switchView('attendance')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition flex items-center gap-1.5 active:scale-95">
+                  <span id="galleryFullModuleText">Daily Attendance</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </button>
+
+              </div>
+            </div>
+
+            <!-- Record Gallery: Cards Grid View -->
+            <div id="galleryCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
+              <!-- Dynamically populated via renderRecordGallery() -->
+            </div>
+
+            <!-- Record Gallery: Alternative Data Table View -->
+            <div id="galleryTableContainer" class="hidden border border-slate-200/80 rounded-xl overflow-hidden">
+              <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                      <th class="py-3 px-4">Employee</th>
+                      <th class="py-3 px-4">Code</th>
+                      <th class="py-3 px-4">Department</th>
+                      <th class="py-3 px-4">Status / Event</th>
+                      <th class="py-3 px-4">Timestamp</th>
+                      <th class="py-3 px-4">Telemetry Detail</th>
+                      <th class="py-3 px-4 text-right">Quick Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="galleryTableBody" class="divide-y divide-slate-100">
+                    <!-- Dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 2: EMPLOYEE ATTENDANCE (DAILY MONITORING CONSOLE) -->
+        <!-- ===================================================================== -->
+        <section id="view-attendance" class="view-panel hidden space-y-5">
+          
+          <!-- Top Control Header -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-end gap-2.5">
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+              
+              <!-- Department Filter -->
+              <select id="attendanceDeptFilter" onchange="loadAttendanceMonitoring()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700 focus:ring-2 focus:ring-[#0F9D91] focus:outline-hidden">
+                <option value="ALL">All Departments</option>
+                <option value="Technology & Engineering">Technology & Engineering</option>
+                <option value="Product Design & UX">Product Design & UX</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance & Accounting">Finance & Accounting</option>
+              </select>
+
+              <!-- Status Filter -->
+              <select id="attendanceStatusFilter" onchange="loadAttendanceMonitoring()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700 focus:ring-2 focus:ring-[#0F9D91] focus:outline-hidden">
+                <option value="ALL">All Statuses</option>
+                <option value="PRESENT">Present</option>
+                <option value="LATE">Late Arrival</option>
+                <option value="ABSENT">Absent</option>
+                <option value="ON_LEAVE">On Leave</option>
+              </select>
+
+              <!-- Search -->
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="attendanceSearchInput" onkeyup="filterAttendanceTableClientSide()" placeholder="Search employee..." class="text-xs bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2 font-semibold text-slate-700 focus:ring-2 focus:ring-[#0F9D91] focus:outline-hidden w-44" />
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Policy Guidance Strip -->
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-xs text-amber-800">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-circle-info text-amber-600"></i>
+              <span><strong>Shift Policy:</strong> Reporting 09:00 AM | Grace 15 mins (Late after 09:15 AM) | Cutoff 11:00 AM (Unchecked automatically converted to Absent)</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-200/60 text-amber-900 px-2 py-0.5 rounded">Enforced</span>
+          </div>
+
+          <!-- Attendance Roster Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3.5 px-4">Employee</th>
+                    <th class="py-3.5 px-4">Code</th>
+                    <th class="py-3.5 px-4">Department</th>
+                    <th class="py-3.5 px-4">Reporting Policy</th>
+                    <th class="py-3.5 px-4">Check-in Time</th>
+                    <th class="py-3.5 px-4">Check-out Time</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Quick Action</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 3: LEAVE MANAGEMENT & MAP-BASED MONITORING -->
+        <!-- ===================================================================== -->
+        <section id="view-leaves" class="view-panel hidden space-y-5">
+          
+          <!-- Top Bar with Sub-view Tabs -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Leave Management & Regional Distribution</h3>
+              <p class="text-xs text-slate-500">Review time-off requests and monitor employee distribution by branch location</p>
+            </div>
+
+            <!-- Tab Switcher (Applications Table vs Branch Map) -->
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              <button onclick="switchLeaveSubView('table')" id="subLeaveTabTable" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-2xs">
+                <i class="fa-solid fa-list-check mr-1.5 text-[#0F9D91]"></i>Applications
+              </button>
+              <button onclick="switchLeaveSubView('map')" id="subLeaveTabMap" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-500 hover:text-slate-800">
+                <i class="fa-solid fa-map-location-dot mr-1.5 text-blue-600"></i>Branch Map View
+              </button>
+            </div>
+          </div>
+
+          <!-- Sub-view 1: Applications Table -->
+          <div id="leaveSubViewTable" class="space-y-4">
+            
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center gap-3">
+              <select id="leaveStatusFilter" onchange="loadLeaves()" class="text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700">
+                <option value="ALL">All Statuses</option>
+                <option value="PENDING" selected>Pending Review</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+
+              <select id="leaveDeptFilter" onchange="loadLeaves()" class="text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700">
+                <option value="ALL">All Departments</option>
+                <option value="Technology & Engineering">Technology & Engineering</option>
+                <option value="Product Design & UX">Product Design & UX</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance & Accounting">Finance & Accounting</option>
+              </select>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+              <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                      <th class="py-3.5 px-4">Employee</th>
+                      <th class="py-3.5 px-4">Department</th>
+                      <th class="py-3.5 px-4">Leave Type</th>
+                      <th class="py-3.5 px-4">Duration</th>
+                      <th class="py-3.5 px-4">Total Days</th>
+                      <th class="py-3.5 px-4">Reason</th>
+                      <th class="py-3.5 px-4 text-center">Status</th>
+                      <th class="py-3.5 px-4 text-right">Review Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leaveTableBody" class="divide-y divide-slate-100">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Sub-view 2: Leaflet Regional Leave Map -->
+          <div id="leaveSubViewMap" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                <div>
+                  <h4 class="text-sm font-bold text-slate-800">Privacy-Respecting Regional Leave Overview</h4>
+                  <p class="text-xs text-slate-400">Aggregated by assigned office location to ensure employee privacy while maintaining executive visibility</p>
+                </div>
+                <span class="text-xs bg-blue-50 text-blue-700 font-semibold px-2.5 py-1 rounded-lg border border-blue-200">
+                  <i class="fa-solid fa-location-dot mr-1 text-blue-600"></i>Active Branches
+                </span>
+              </div>
+              <div id="leaveLeafletMap" class="h-96 w-full rounded-xl border border-slate-200 z-10"></div>
+            </div>
+
+            <!-- Branch breakdown cards -->
+            <div id="branchLeaveCards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 4: LOAN MANAGEMENT -->
+        <!-- ===================================================================== -->
+        <section id="view-loans" class="view-panel hidden space-y-5">
+          
+          <!-- Summary Strip -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Total Loan Applications</span>
+              <div id="loanStatTotal" class="text-xl font-bold text-slate-800 mono-num mt-1">5</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Active Loans</span>
+              <div id="loanStatActive" class="text-xl font-bold text-emerald-600 mono-num mt-1">2</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Total Approved</span>
+              <div id="loanStatApprovedAmt" class="text-xl font-bold text-slate-800 mono-num mt-1">PKR 1.25M</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Outstanding Balance</span>
+              <div id="loanStatOutstanding" class="text-xl font-bold text-amber-600 mono-num mt-1">PKR 860,000</div>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-slate-800">Employee Loan Applications & Repayment Life Cycle</h4>
+                <p class="text-xs text-slate-400">Disbursement tracking, installment schedules & monthly deduction status</p>
+              </div>
+              <select id="loanStatusFilter" onchange="loadLoans()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-700">
+                <option value="ALL">All Statuses</option>
+                <option value="PENDING">Pending Review</option>
+                <option value="APPROVED">Approved & Disbursed</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3.5 px-4">Employee</th>
+                    <th class="py-3.5 px-4">Loan Type</th>
+                    <th class="py-3.5 px-4">Applied Date</th>
+                    <th class="py-3.5 px-4 text-right">Requested</th>
+                    <th class="py-3.5 px-4 text-right">Approved</th>
+                    <th class="py-3.5 px-4 text-center">Tenure (Mos)</th>
+                    <th class="py-3.5 px-4 text-right">Monthly Installment</th>
+                    <th class="py-3.5 px-4 text-right">Outstanding</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="loanTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 5: EMPLOYEE MANAGEMENT -->
+        <!-- ===================================================================== -->
+        <section id="view-employees" class="view-panel hidden space-y-5">
+          
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Employee Master Roster</h3>
+              <p class="text-xs text-slate-500">Corporate directory, status management & unique employee onboarding</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Search -->
+              <input type="text" id="employeeSearchInput" onkeyup="loadEmployees()" placeholder="Search name or ID..." class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700 w-44" />
+              
+              <!-- Department -->
+              <select id="employeeDeptFilter" onchange="loadEmployees()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700">
+                <option value="ALL">All Departments</option>
+                <option value="Technology & Engineering">Technology</option>
+                <option value="Product Design & UX">Product Design</option>
+                <option value="Human Resources">HR</option>
+                <option value="Finance & Accounting">Finance</option>
+              </select>
+
+              <button onclick="openModalAddEmployee()" class="px-4 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Employee</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3.5 px-4">Employee</th>
+                    <th class="py-3.5 px-4">Code</th>
+                    <th class="py-3.5 px-4">Designation</th>
+                    <th class="py-3.5 px-4">Department</th>
+                    <th class="py-3.5 px-4">Assigned Branch</th>
+                    <th class="py-3.5 px-4">Contact</th>
+                    <th class="py-3.5 px-4 text-right">Basic Salary</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Toggle Status</th>
+                  </tr>
+                </thead>
+                <tbody id="employeeTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 6: PAYROLL MANAGEMENT -->
+        <!-- ===================================================================== -->
+        <section id="view-payroll" class="view-panel hidden space-y-5">
+          
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Corporate Payroll & Compensation</h3>
+              <p class="text-xs text-slate-500">Gross earnings, statutory tax, absence deductions & individual payslip downloads</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <select id="payrollMonthSelect" onchange="loadPayroll()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800">
+                <option value="November 2026" selected>November 2026</option>
+                <option value="October 2026">October 2026</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Payroll Financial Banner -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Total Gross Remuneration</span>
+              <div id="payrollGrossTotal" class="text-xl font-black text-slate-800 mono-num mt-1">PKR 3,340,000</div>
+              <p class="text-[11px] text-slate-400 mt-1">Basic + Allowances</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Statutory & Loan Deductions</span>
+              <div id="payrollDeductionsTotal" class="text-xl font-black text-rose-600 mono-num mt-1">PKR 500,000</div>
+              <p class="text-[11px] text-slate-400 mt-1">Income Tax + Loan Installments</p>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <span class="text-xs font-semibold text-slate-400">Net Disbursed to Bank</span>
+              <div id="payrollNetTotal" class="text-xl font-black text-emerald-600 mono-num mt-1">PKR 2,840,000</div>
+              <p class="text-[11px] text-slate-400 mt-1">Disbursed via automated ACH</p>
+            </div>
+          </div>
+
+          <!-- Records Table -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3.5 px-4">Employee</th>
+                    <th class="py-3.5 px-4">Department</th>
+                    <th class="py-3.5 px-4 text-right">Basic Pay</th>
+                    <th class="py-3.5 px-4 text-right">Gross Salary</th>
+                    <th class="py-3.5 px-4 text-right">Tax Deduction</th>
+                    <th class="py-3.5 px-4 text-right">Loan Deduction</th>
+                    <th class="py-3.5 px-4 text-right font-bold text-emerald-700">Net Salary</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Payslip</th>
+                  </tr>
+                </thead>
+                <tbody id="payrollTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 7: PUBLIC HOLIDAY CALENDAR -->
+        <!-- ===================================================================== -->
+        <section id="view-holidays" class="view-panel hidden space-y-5">
+          
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Public & Gazetted Holiday Calendar (2026)</h3>
+              <p class="text-xs text-slate-500">Official non-working days, bank observances & religious holidays</p>
+            </div>
+
+            <button onclick="openModalAddHoliday()" class="px-4 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+              <i class="fa-solid fa-calendar-plus"></i>
+              <span>Add Holiday</span>
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3.5 px-4">Holiday Title</th>
+                    <th class="py-3.5 px-4">Date</th>
+                    <th class="py-3.5 px-4">Day</th>
+                    <th class="py-3.5 px-4">Type</th>
+                    <th class="py-3.5 px-4">Applies To</th>
+                    <th class="py-3.5 px-4">Description</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="holidaysTableBody" class="divide-y divide-slate-100">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 8: INDIVIDUAL EMPLOYEE REPORTS -->
+        <!-- ===================================================================== -->
+        <section id="view-reports" class="view-panel hidden space-y-5">
+          
+          <!-- Report Filter Card -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-800">Individual Employee Comprehensive Report</h3>
+                <p class="text-xs text-slate-500">Detailed historical attendance statistics, punctuality variance, leave consumption & PDF export</p>
+              </div>
+
+              <!-- Export Button -->
+              <button onclick="downloadEmployeeReportPdf()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm active:scale-95">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>Download Official PDF Report</span>
+              </button>
+            </div>
+
+            <!-- Controls Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              
+              <!-- Employee Select -->
+              <div>
+                <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Select Employee</label>
+                <select id="reportEmployeeSelect" onchange="loadEmployeeReport()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800">
+                  <!-- Dynamically populated with all employees -->
+                </select>
+              </div>
+
+              <!-- Period Preset -->
+              <div>
+                <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Reporting Period</label>
+                <select id="reportPeriodSelect" onchange="onReportPeriodChange(this.value)" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800">
+                  <option value="MONTHLY" selected>Monthly Report (Current Month)</option>
+                  <option value="BI_WEEKLY">Bi-Weekly Report (Last 14 Days)</option>
+                  <option value="YEARLY">Yearly Report (2026 Full Year)</option>
+                  <option value="CUSTOM">Custom Date Range</option>
+                </select>
+              </div>
+
+              <!-- From Date -->
+              <div>
+                <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">From Date</label>
+                <input type="date" id="reportFromDate" value="2026-11-01" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700" />
+              </div>
+
+              <!-- To Date -->
+              <div>
+                <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">To Date</label>
+                <input type="date" id="reportToDate" value="2026-11-19" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700" />
+              </div>
+
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button onclick="loadEmployeeReport()" class="px-4 py-1.5 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-rotate"></i> Generate Report
+              </button>
+            </div>
+          </div>
+
+          <!-- Report Preview Screen -->
+          <div id="reportPreviewContainer" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-6">
+            <!-- Dynamically populated with employee banner, stats, leave breakdown, loans, and day-by-day table -->
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 9: CENTRALIZED NOTIFICATIONS & ACTIVITY STREAM -->
+        <!-- ===================================================================== -->
+        <section id="view-notifications" class="view-panel hidden space-y-5">
+          
+          <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Notifications & Real-Time Activity Feed</h3>
+              <p class="text-xs text-slate-500">Live operational alerts, policy violations, leave and loan submissions</p>
+            </div>
+
+            <button onclick="markAllNotificationsRead()" class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
+              <i class="fa-solid fa-check-double mr-1 text-[#0F9D91]"></i> Mark All Read
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left 2 Cols: Notification Alerts -->
+            <div class="lg:col-span-2 space-y-3" id="notificationsFullList">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Right 1 Col: Real-time Activity Timeline -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs space-y-4">
+              <h4 class="text-sm font-bold text-slate-800 pb-2 border-b border-slate-100">Live System Activity Stream</h4>
+              <div id="activityTimelineFull" class="space-y-3.5">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- MODULE 10: GEOFENCE & ANTI-SPOOFING SETTINGS -->
+        <!-- ===================================================================== -->
+        <section id="view-security" class="view-panel hidden space-y-6">
+          
+          <!-- Header info -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Geofence Perimeter & Anti-Spoofing Engine</h3>
+              <p class="text-xs text-slate-500">Spatial radius configuration, GPS mock provider detection & biometric device binding</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Spatial Engine ACTIVE
+            </span>
+          </div>
+
+          <!-- Grid: Map & Controls -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Map View (2 Cols) -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <span class="text-xs font-bold uppercase text-slate-600">Spatial Boundary Map</span>
+                <select id="officeSelectSecurity" onchange="onSecurityOfficeChange(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 font-semibold text-slate-700">
+                  <option value="b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e">Headquarters - Tech Campus (Lahore)</option>
+                  <option value="c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f">Downtown Hub - Regional Office (Karachi)</option>
+                </select>
+              </div>
+              <div id="geofenceMap" class="h-96 w-full rounded-xl border border-slate-200 z-10"></div>
+            </div>
+
+            <!-- Controls & Simulator (1 Col) -->
+            <div class="space-y-4">
+              
+              <!-- Slider Card -->
+              <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Geofence Radius</span>
+                  <span id="radiusLabel" class="text-xs font-black text-[#0F9D91] mono-num bg-teal-50 px-2 py-0.5 rounded">100 m</span>
+                </div>
+                <input type="range" id="radiusSlider" min="20" max="300" step="10" value="100" class="w-full accent-[#0F9D91] cursor-pointer" />
+                <p class="text-[11px] text-slate-400">Punches outside this perimeter are rejected automatically with OUT_OF_BOUNDS error.</p>
+              </div>
+
+              <!-- Anti-Spoofing Toggles -->
+              <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs space-y-2.5">
+                <span class="text-xs font-bold text-slate-700 block mb-1">Anti-Tamper Protections</span>
+                
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <div class="text-xs font-semibold text-slate-800">Mock GPS Detection</div>
+                    <div class="text-[10px] text-slate-400">Flags mock provider apps</div>
+                  </div>
+                  <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold text-[10px]">ENFORCED</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <div class="text-xs font-semibold text-slate-800">Device Binding</div>
+                    <div class="text-[10px] text-slate-400">Prevents buddy-punching</div>
+                  </div>
+                  <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold text-[10px]">LOCKED</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <div class="text-xs font-semibold text-slate-800">Clock Drift Threshold</div>
+                    <div class="text-[10px] text-slate-400">Rejects drift > 5 mins</div>
+                  </div>
+                  <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold text-[10px]">&plusmn;5 MINS</span>
+                </div>
+              </div>
+
+              <!-- Security Simulator -->
+              <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs space-y-2.5">
+                <span class="text-xs font-bold text-slate-700 block">Security Punch Simulator</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="simulatePunchSecurity('INSIDE')" class="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition">
+                    Test Inside (50m)
+                  </button>
+                  <button onclick="simulatePunchSecurity('OUTSIDE')" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-bold transition">
+                    Test Outside (350m)
+                  </button>
+                  <button onclick="simulatePunchSecurity('MOCK_GPS')" class="col-span-2 p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition">
+                    Test Mock GPS Spoof
+                  </button>
+                </div>
+                <div id="securitySimToast" class="hidden text-xs p-2.5 rounded-xl border mt-2"></div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD NEW EMPLOYEE -->
+  <!-- ========================================================================= -->
+  <div id="modalAddEmployee" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150">
+      <div class="px-6 py-4 bg-[#142B49] text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-[#0F9D91]"></i>
+          <h3 class="font-bold text-sm">Register New Corporate Employee</h3>
+        </div>
+        <button onclick="closeModalAddEmployee()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="formAddEmployee" onsubmit="handleCreateEmployee(event)" class="p-6 space-y-3.5 text-xs">
+        <div id="addEmployeeError" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-xs"></div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Full Name *</label>
+            <input type="text" id="newEmpFullName" required placeholder="e.g. Farhan Zaidi" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Employee Code *</label>
+            <input type="text" id="newEmpCode" required placeholder="e.g. TC-1006" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800 uppercase" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Corporate Email *</label>
+            <input type="email" id="newEmpEmail" required placeholder="f.zaidi@als.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Contact Phone</label>
+            <input type="text" id="newEmpPhone" placeholder="+92 300 1234567" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Department *</label>
+            <select id="newEmpDept" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800">
+              <option value="Technology & Engineering">Technology & Engineering</option>
+              <option value="Product Design & UX">Product Design & UX</option>
+              <option value="Human Resources">Human Resources</option>
+              <option value="Finance & Accounting">Finance & Accounting</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Job Designation *</label>
+            <input type="text" id="newEmpTitle" required placeholder="Cloud DevOps Lead" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Basic Monthly Salary (PKR) *</label>
+            <input type="number" id="newEmpSalary" required value="220000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Assigned Branch</label>
+            <select id="newEmpBranch" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800">
+              <option value="Headquarters - Technology Campus">Headquarters - Tech Campus (LHR)</option>
+              <option value="Downtown Innovation Hub">Downtown Innovation Hub (KHI)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModalAddEmployee()" class="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+          <button type="submit" id="btnSubmitAddEmployee" class="px-5 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl font-bold transition shadow-sm active:scale-95">Register Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REVIEW LEAVE APPLICATION -->
+  <!-- ========================================================================= -->
+  <div id="modalReviewLeave" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in duration-150">
+      <div class="px-5 py-4 bg-[#142B49] text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">Review Leave Application</h3>
+        <button onclick="closeModalReviewLeave()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3.5 text-xs">
+        <input type="hidden" id="reviewLeaveId" />
+        <div id="reviewLeaveSummary" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Reviewer Remarks / Reason (Optional)</label>
+          <textarea id="reviewLeaveReason" rows="2" placeholder="e.g. Approved per annual leave balance policy" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-semibold text-slate-800"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button onclick="submitLeaveDecision('REJECTED')" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold transition">Reject Leave</button>
+          <button onclick="submitLeaveDecision('APPROVED')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shadow-sm">Approve Leave</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: REVIEW LOAN APPLICATION -->
+  <!-- ========================================================================= -->
+  <div id="modalReviewLoan" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in duration-150">
+      <div class="px-5 py-4 bg-[#142B49] text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">Review Loan Application</h3>
+        <button onclick="closeModalReviewLoan()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3.5 text-xs">
+        <input type="hidden" id="reviewLoanId" />
+        <div id="reviewLoanSummary" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Approved Amount (PKR)</label>
+            <input type="number" id="reviewLoanApprovedAmt" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Repayment Term (Months)</label>
+            <input type="number" id="reviewLoanMonths" min="1" max="60" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-800" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Finance / Review Remarks</label>
+          <textarea id="reviewLoanReason" rows="2" placeholder="e.g. Approved with standard 12-month tenure" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-semibold text-slate-800"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button onclick="submitLoanDecision('REJECTED')" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold transition">Reject</button>
+          <button onclick="submitLoanDecision('APPROVED')" class="px-5 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl font-bold transition shadow-sm">Authorize & Disburse</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD PUBLIC HOLIDAY -->
+  <!-- ========================================================================= -->
+  <div id="modalAddHoliday" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in duration-150">
+      <div class="px-5 py-4 bg-[#142B49] text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">Add Public / Gazetted Holiday</h3>
+        <button onclick="closeModalAddHoliday()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="formAddHoliday" onsubmit="handleCreateHoliday(event)" class="p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Holiday Title *</label>
+          <input type="text" id="newHolidayTitle" required placeholder="e.g. Independence Day Observance" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Date *</label>
+            <input type="date" id="newHolidayDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Holiday Type</label>
+            <select id="newHolidayType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800">
+              <option value="Gazetted Public Holiday">Gazetted Public Holiday</option>
+              <option value="Bank Holiday">Bank Holiday</option>
+              <option value="Optional Religious Holiday">Optional Holiday</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Description / Gazette Notification</label>
+          <textarea id="newHolidayDesc" rows="2" placeholder="Official federal or banking observance" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-semibold text-slate-800"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModalAddHoliday()" class="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl font-bold transition shadow-sm">Save to Calendar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- TOAST / NOTIFICATION POPUP -->
+  <!-- ========================================================================= -->
+  <div id="globalToast" class="fixed bottom-6 right-6 z-50 hidden max-w-sm p-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300">
+    <i id="globalToastIcon" class="text-base"></i>
+    <span id="globalToastMessage" class="flex-1"></span>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT APPLICATION CORE -->
+  <!-- ========================================================================= -->
+  <script>
+    // State management
+    let currentView = 'dashboard';
+    let globalSelectedDate = '2026-11-19';
+    let leaveLeafletInstance = null;
+    let geofenceLeafletInstance = null;
+    let geofenceCircle = null;
+    let officeMarker = null;
+    let allEmployeesCache = [];
+    let autoRefreshTimer = null;
+
+    // Active Office coordinates for Geofence & Security
+    let currentSecurityOffice = {
+      id: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+      name: 'Headquarters - Tech Campus (Lahore)',
+      lat: 31.5204,
+      lng: 74.3587,
+      radius: 100
+    };
+
+    // =========================================================================
+    // STANDALONE / GITHUB PAGES OFFLINE DEMO INTERCEPTOR
+    // =========================================================================
+    const originalFetch = window.fetch;
+    const demoEmployees = [
+      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: null },
+      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: null },
+      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null },
+      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null },
+      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null },
+      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave' },
+      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave' },
+      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
+      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
+      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null }
+    ];
+
+    const demoLeaves = [
+      { id: 'leave-1', employeeName: 'Zainab Malik', employeeCode: 'PD-2001', department: 'Product Design & UX', leaveType: 'Annual Leave', startDate: '2026-11-19', endDate: '2026-11-21', status: 'APPROVED', reason: 'Scheduled personal annual leave' },
+      { id: 'leave-2', employeeName: 'Ayesha Siddiqui', employeeCode: 'PD-2002', department: 'Product Design & UX', leaveType: 'Sick Leave', startDate: '2026-11-19', endDate: '2026-11-20', status: 'APPROVED', reason: 'Medical consultation & recovery' },
+      { id: 'leave-3', employeeName: 'Usman Tariq', employeeCode: 'QA-3001', department: 'Technology & Engineering', leaveType: 'Casual Leave', startDate: '2026-11-25', endDate: '2026-11-26', status: 'PENDING', reason: 'Family event' }
+    ];
+
+    const demoLoans = [
+      { id: 'loan-1', employeeName: 'Bilal Hassan', employeeCode: 'TC-1004', department: 'Technology & Engineering', loanType: 'Emergency Relief', requestedAmount: 150000, approvedAmount: 150000, outstandingBalance: 125000, status: 'APPROVED' },
+      { id: 'loan-2', employeeName: 'Hamza Sheikh', employeeCode: 'OP-4001', department: 'Operations & Logistics', loanType: 'Vehicle Loan', requestedAmount: 250000, approvedAmount: 0, outstandingBalance: 250000, status: 'PENDING' }
+    ];
+
+    const demoPayroll = [
+      { id: 'pay-1', employeeName: 'Sajjad Ali', employeeCode: 'AK-8924', department: 'Product Design & UX', basicSalary: 320000, allowances: 48000, deductions: 12000, netSalary: 356000, status: 'DISBURSED' },
+      { id: 'pay-2', employeeName: 'Ahmed Khan', employeeCode: 'TC-1002', department: 'Technology & Engineering', basicSalary: 350000, allowances: 52000, deductions: 15000, netSalary: 387000, status: 'DISBURSED' },
+      { id: 'pay-3', employeeName: 'Fatima Zahra', employeeCode: 'TC-1003', department: 'Technology & Engineering', basicSalary: 280000, allowances: 42000, deductions: 10000, netSalary: 312000, status: 'DISBURSED' },
+      { id: 'pay-4', employeeName: 'Mariam Noor', employeeCode: 'HR-5001', department: 'Human Resources', basicSalary: 190000, allowances: 28000, deductions: 7000, netSalary: 211000, status: 'DISBURSED' }
+    ];
+
+    window.fetch = async function(url, options) {
+      try {
+        const res = await originalFetch(url, options);
+        if (res.ok) return res;
+        throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        return mockApiHandler(url, options);
+      }
+    };
+
+    function mockApiHandler(url, options) {
+      const u = typeof url === 'string' ? url : url.toString();
+      let payload = { success: true };
+
+      if (u.includes('/api/v1/hrms/dashboard')) {
+        payload = {
+          success: true,
+          data: {
+            totalEmployees: 10,
+            presentToday: 5,
+            lateArrivalsToday: 1,
+            absentToday: 2,
+            onLeaveToday: 2,
+            pendingLeaveRequests: 1,
+            pendingLoanApplications: 1,
+            totalMonthlyPayroll: 2840000,
+            monthlyAttendanceTrends: [
+              { month: 'Jun', attendanceRate: 94 },
+              { month: 'Jul', attendanceRate: 96 },
+              { month: 'Aug', attendanceRate: 91 },
+              { month: 'Sep', attendanceRate: 95 },
+              { month: 'Oct', attendanceRate: 93 },
+              { month: 'Nov', attendanceRate: 95 }
+            ],
+            departmentAttendance: [
+              { department: 'Product Design & UX', present: 1, total: 3 },
+              { department: 'Technology & Engineering', present: 3, total: 5 },
+              { department: 'Human Resources', present: 1, total: 1 },
+              { department: 'Operations & Logistics', present: 0, total: 1 }
+            ],
+            upcomingHolidays: [
+              { title: 'Quaid-e-Azam Day', date: '2026-12-25', daysLeft: '35 days' },
+              { title: 'New Year Day', date: '2027-01-01', daysLeft: '42 days' }
+            ],
+            recentActivities: [
+              { user: 'Sajjad Ali', action: 'Biometric Verified Punch', time: '09:05 AM', icon: 'fa-fingerprint', color: 'text-emerald-500' },
+              { user: 'Bilal Hassan', action: 'Late Check-in Recorded', time: '09:42 AM', icon: 'fa-clock', color: 'text-amber-500' },
+              { user: 'Zainab Malik', action: 'Approved Annual Leave', time: 'Yesterday', icon: 'fa-plane', color: 'text-blue-500' }
+            ]
+          }
+        };
+      } else if (u.includes('/api/v1/attendance/manager-monitoring')) {
+        let list = [...demoEmployees];
+        if (u.includes('department=') && !u.includes('department=ALL')) {
+          const match = u.match(/department=([^&]+)/);
+          if (match) {
+            const dept = decodeURIComponent(match[1]);
+            list = list.filter(e => e.department.toLowerCase() === dept.toLowerCase());
+          }
+        }
+        if (u.includes('status=') && !u.includes('status=ALL')) {
+          const match = u.match(/status=([^&]+)/);
+          if (match) {
+            const st = decodeURIComponent(match[1]).toUpperCase();
+            list = list.filter(e => e.status === st);
+          }
+        }
+        payload = {
+          success: true,
+          date: '2026-11-19',
+          metrics: { totalEmployees: 10, present: 5, late: 1, notCheckedIn: 2, absent: 2, onLeave: 2 },
+          departments: ['Human Resources', 'Operations & Logistics', 'Product Design & UX', 'Technology & Engineering'],
+          employees: list,
+          data: { employees: list }
+        };
+      } else if (u.includes('/api/v1/hrms/leaves')) {
+        payload = { success: true, data: demoLeaves };
+      } else if (u.includes('/api/v1/hrms/loans')) {
+        payload = { success: true, data: demoLoans };
+      } else if (u.includes('/api/v1/hrms/payroll')) {
+        payload = { success: true, data: { records: demoPayroll, totalDisbursed: 2840000 } };
+      } else if (u.includes('/api/v1/attendance/manager-quick-punch')) {
+        payload = { success: true, message: 'Check-in recorded successfully in Demo Mode.' };
+      }
+
+      return new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // DOM Ready
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Set default date input
+      document.getElementById('globalDateInput').value = globalSelectedDate;
+
+      // Initial view load
+      await switchView('dashboard');
+
+      // Start background polling every 30s
+      startAutoRefresh();
+    });
+
+    /**
+     * View Switcher Navigation
+     */
+    async function switchView(viewName) {
+      currentView = viewName;
+
+      // Update sidebar nav items
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('text-white', 'bg-white/10');
+        btn.classList.add('text-slate-400');
+      });
+      const activeNavBtn = document.getElementById(`nav-${viewName}`);
+      if (activeNavBtn) {
+        activeNavBtn.classList.remove('text-slate-400');
+        activeNavBtn.classList.add('text-white', 'bg-white/10');
+      }
+
+      // Hide all panels
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.add('hidden'));
+
+      // Show requested panel
+      const targetPanel = document.getElementById(`view-${viewName}`);
+      if (targetPanel) {
+        targetPanel.classList.remove('hidden');
+      }
+
+      // Update page title
+      const titles = {
+        dashboard: 'Dashboard',
+        attendance: 'Workforce Daily Attendance',
+        leaves: 'Leave Management & Regional Distribution',
+        loans: 'Loan Management & Disbursals',
+        employees: 'Corporate Employee Master Roster',
+        payroll: 'Corporate Payroll & Payslips',
+        holidays: 'Public & Gazetted Holiday Calendar',
+        reports: 'Individual Employee Comprehensive Reports',
+        notifications: 'Alerts & System Activity',
+        security: 'Geofence Perimeter & Anti-Spoofing Settings',
+      };
+      document.getElementById('pageTitle').innerText = titles[viewName] !== undefined ? titles[viewName] : '';
+
+      // Load specific view data
+      if (viewName === 'dashboard') await loadDashboard();
+      else if (viewName === 'attendance') await loadAttendanceMonitoring();
+      else if (viewName === 'leaves') await loadLeaves();
+      else if (viewName === 'loans') await loadLoans();
+      else if (viewName === 'employees') await loadEmployees();
+      else if (viewName === 'payroll') await loadPayroll();
+      else if (viewName === 'holidays') await loadHolidays();
+      else if (viewName === 'reports') await loadReportsModule();
+      else if (viewName === 'notifications') await loadNotificationsView();
+      else if (viewName === 'security') initSecurityMap();
+    }
+
+    function onGlobalDateChange(newDate) {
+      globalSelectedDate = newDate;
+      refreshCurrentView();
+    }
+
+    async function refreshCurrentView() {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('fa-spin');
+      try {
+        await switchView(currentView);
+        showToast('Data refreshed successfully', 'success');
+      } finally {
+        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 600);
+      }
+    }
+
+    function startAutoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(() => {
+        // Silently refresh current view without toast
+        if (currentView === 'dashboard') loadDashboard();
+        else if (currentView === 'attendance') loadAttendanceMonitoring();
+      }, 30000);
+    }
+
+    /**
+     * Toast Utility
+     */
+    function showToast(msg, type = 'info') {
+      const toast = document.getElementById('globalToast');
+      const icon = document.getElementById('globalToastIcon');
+      const text = document.getElementById('globalToastMessage');
+      
+      text.innerText = msg;
+      toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm p-4 rounded-2xl shadow-xl border text-xs font-semibold flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3';
+
+      if (type === 'success') {
+        toast.classList.add('bg-emerald-900', 'text-white', 'border-emerald-700');
+        icon.className = 'fa-solid fa-circle-check text-emerald-400';
+      } else if (type === 'error') {
+        toast.classList.add('bg-rose-900', 'text-white', 'border-rose-700');
+        icon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+      } else {
+        toast.classList.add('bg-slate-900', 'text-white', 'border-slate-700');
+        icon.className = 'fa-solid fa-circle-info text-teal-400';
+      }
+
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 1: DASHBOARD LOGIC
+     * =========================================================================
+     */
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`/api/v1/hrms/dashboard?date=${globalSelectedDate}`);
+        const json = await res.json();
+        if (!json.success) return;
+        const data = json.data;
+
+        // Populate 8 KPI Summary Cards
+        document.getElementById('kpiTotalEmployees').innerText = data.totalEmployees;
+        document.getElementById('kpiPresentToday').innerText = data.presentToday;
+        document.getElementById('kpiAbsentToday').innerText = data.absentToday;
+        document.getElementById('kpiLateArrivals').innerText = data.lateArrivalsToday;
+        document.getElementById('kpiOnLeaveToday').innerText = data.onLeaveToday;
+        document.getElementById('kpiPendingLeaves').innerText = data.pendingLeaveRequests;
+        document.getElementById('kpiPendingLoans').innerText = data.pendingLoanApplications;
+        document.getElementById('kpiTotalPayroll').innerText = `PKR ${(data.totalMonthlyPayroll / 1000000).toFixed(2)}M`;
+
+        const rate = data.totalEmployees ? Math.round((data.presentToday / data.totalEmployees) * 100) : 0;
+        document.getElementById('kpiPresentRate').innerText = `${rate}% rate`;
+
+        // Update Nav badges
+        document.getElementById('badgePendingLeaves').innerText = data.pendingLeaveRequests;
+        document.getElementById('badgePendingLoans').innerText = data.pendingLoanApplications;
+
+        // Render SVG Donut Chart
+        renderDashboardDonut(data);
+
+        // Render Monthly Attendance Trends
+        renderMonthlyTrends(data.monthlyAttendanceTrends);
+
+        // Render Department Attendance Breakdown
+        renderDeptAttendance(data.departmentAttendance);
+
+        // Render Upcoming Holidays
+        renderUpcomingHolidays(data.upcomingHolidays);
+
+        // Render Recent Activity Stream
+        renderRecentActivities(data.recentActivities);
+
+        // Populate & Render Record Gallery
+        await loadRecordGalleryData();
+
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      }
+    }
+
+    /**
+     * =========================================================================
+     * RECORD GALLERY ENGINE (Interactive Workforce & Telemetry Directory)
+     * =========================================================================
+     */
+    let galleryFilter = 'ALL';
+    let galleryViewMode = 'grid';
+    let galleryEmployeesCache = [];
+    let galleryLeavesCache = [];
+    let galleryLoansCache = [];
+    let galleryPayrollCache = [];
+
+    async function loadRecordGalleryData() {
+      try {
+        const [monitoringRes, leavesRes, loansRes, payrollRes] = await Promise.all([
+          fetch(`/api/v1/attendance/manager-monitoring?department=ALL&status=ALL&date=${globalSelectedDate}`),
+          fetch('/api/v1/hrms/leaves'),
+          fetch('/api/v1/hrms/loans'),
+          fetch('/api/v1/hrms/payroll')
+        ]);
+
+        const [monJson, leavesJson, loansJson, payrollJson] = await Promise.all([
+          monitoringRes.json(),
+          leavesRes.json(),
+          loansRes.json(),
+          payrollRes.json()
+        ]);
+
+        if (monJson.employees) {
+          galleryEmployeesCache = monJson.employees;
+        } else if (monJson.data && monJson.data.employees) {
+          galleryEmployeesCache = monJson.data.employees;
+        }
+
+        galleryLeavesCache = leavesJson.data || [];
+        galleryLoansCache = loansJson.data || [];
+        galleryPayrollCache = (payrollJson.data && payrollJson.data.records) ? payrollJson.data.records : [];
+
+        // Update Pill Counts
+        const total = galleryEmployeesCache.length;
+        const presentCount = galleryEmployeesCache.filter(e => e.status === 'PRESENT').length;
+        const lateCount = galleryEmployeesCache.filter(e => e.status === 'LATE').length;
+        const absentCount = galleryEmployeesCache.filter(e => e.status === 'ABSENT' || e.status === 'NOT_CHECKED_IN').length;
+        const onLeaveCount = galleryEmployeesCache.filter(e => e.status === 'ON_LEAVE').length;
+        const pendingLeavesCount = galleryLeavesCache.filter(l => l.status === 'PENDING').length;
+        const pendingLoansCount = galleryLoansCache.filter(l => l.status === 'PENDING').length;
+        const payrollCount = galleryPayrollCache.length || total;
+
+        // Update Category Dropdown Option Counts
+        const dropdown = document.getElementById('galleryCategoryDropdown');
+        if (dropdown) {
+          const optMap = {
+            'ALL': `All Staff (${total})`,
+            'PRESENT': `Present Today (${presentCount})`,
+            'LATE': `Late Arrivals (${lateCount})`,
+            'ABSENT': `Absent Today (${absentCount})`,
+            'ON_LEAVE': `On Leave (${onLeaveCount})`,
+            'PENDING_LEAVE': `Pending Leaves (${pendingLeavesCount})`,
+            'PENDING_LOAN': `Pending Loans (${pendingLoansCount})`,
+            'PAYROLL': `Payroll Disbursals (${payrollCount})`,
+          };
+          Array.from(dropdown.options).forEach(opt => {
+            if (optMap[opt.value]) opt.text = optMap[opt.value];
+          });
+        }
+
+        renderRecordGallery();
+      } catch (err) {
+        console.error('Failed to load record gallery data:', err);
+      }
+    }
+
+    async function navigateToRecordGallery(filterKey) {
+      if (currentView !== 'dashboard') {
+        await switchView('dashboard');
+      }
+      applyRecordGalleryFilter(filterKey, true);
+    }
+
+    function applyRecordGalleryFilter(filterKey, shouldScroll = false) {
+      galleryFilter = filterKey;
+
+      // Sync dropdown value
+      const dropdown = document.getElementById('galleryCategoryDropdown');
+      if (dropdown && dropdown.value !== filterKey) {
+        dropdown.value = filterKey;
+      }
+
+      // Update badge label
+      const badgeLabels = {
+        'ALL': 'All Staff',
+        'PRESENT': 'Present Today',
+        'LATE': 'Late Arrivals',
+        'ABSENT': 'Absent / Cutoff',
+        'ON_LEAVE': 'On Approved Leave',
+        'PENDING_LEAVE': 'Pending Leaves',
+        'PENDING_LOAN': 'Pending Loans',
+        'PAYROLL': 'Payroll Disbursals'
+      };
+      const badgeEl = document.getElementById('galleryActiveFilterBadge');
+      if (badgeEl) {
+        badgeEl.innerText = badgeLabels[filterKey] || filterKey;
+      }
+
+      // Update jump button
+      const jumpText = document.getElementById('galleryFullModuleText');
+      const jumpBtn = document.getElementById('galleryFullModuleBtn');
+      if (jumpText && jumpBtn) {
+        if (filterKey === 'PENDING_LEAVE') {
+          jumpText.innerText = 'Leave Management';
+          jumpBtn.onclick = () => switchView('leaves');
+        } else if (filterKey === 'PENDING_LOAN') {
+          jumpText.innerText = 'Loan Management';
+          jumpBtn.onclick = () => switchView('loans');
+        } else if (filterKey === 'PAYROLL') {
+          jumpText.innerText = 'Payroll Console';
+          jumpBtn.onclick = () => switchView('payroll');
+        } else {
+          jumpText.innerText = 'Daily Attendance';
+          jumpBtn.onclick = () => switchView('attendance');
+        }
+      }
+
+      // Sync with attendanceStatusFilter in case user navigates to attendance console
+      const attFilter = document.getElementById('attendanceStatusFilter');
+      if (attFilter) {
+        if (['ALL', 'PRESENT', 'LATE', 'ABSENT', 'ON_LEAVE'].includes(filterKey)) {
+          attFilter.value = filterKey;
+        }
+      }
+
+      renderRecordGallery();
+
+      // Smooth scroll if triggered from KPI card click
+      if (shouldScroll) {
+        const target = document.getElementById('recordGallerySection');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.classList.add('ring-2', 'ring-[#0F9D91]', 'ring-offset-2');
+          setTimeout(() => {
+            target.classList.remove('ring-2', 'ring-[#0F9D91]', 'ring-offset-2');
+          }, 1400);
+        }
+      }
+    }
+
+    function setGalleryViewMode(mode) {
+      galleryViewMode = mode;
+      const gridBtn = document.getElementById('galleryViewGridBtn');
+      const tableBtn = document.getElementById('galleryViewTableBtn');
+      const gridContainer = document.getElementById('galleryCardsGrid');
+      const tableContainer = document.getElementById('galleryTableContainer');
+
+      if (mode === 'grid') {
+        gridBtn.className = 'px-2.5 py-1.5 rounded-lg bg-white text-slate-800 shadow-2xs transition';
+        tableBtn.className = 'px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition';
+        gridContainer.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+      } else {
+        tableBtn.className = 'px-2.5 py-1.5 rounded-lg bg-white text-slate-800 shadow-2xs transition';
+        gridBtn.className = 'px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition';
+        tableContainer.classList.remove('hidden');
+        gridContainer.classList.add('hidden');
+      }
+    }
+
+    function filterRecordGallery() {
+      renderRecordGallery();
+    }
+
+    function renderRecordGallery() {
+      const q = (document.getElementById('gallerySearchInput')?.value || '').toLowerCase().trim();
+      const grid = document.getElementById('galleryCardsGrid');
+      const tbody = document.getElementById('galleryTableBody');
+      if (!grid || !tbody) return;
+
+      if (galleryFilter === 'PENDING_LEAVE') {
+        renderGalleryPendingLeaves(q, grid, tbody);
+      } else if (galleryFilter === 'PENDING_LOAN') {
+        renderGalleryPendingLoans(q, grid, tbody);
+      } else if (galleryFilter === 'PAYROLL') {
+        renderGalleryPayroll(q, grid, tbody);
+      } else {
+        renderGalleryAttendance(q, grid, tbody);
+      }
+    }
+
+    function renderGalleryAttendance(q, grid, tbody) {
+      grid.innerHTML = '';
+      tbody.innerHTML = '';
+
+      let list = [...galleryEmployeesCache];
+      if (galleryFilter === 'PRESENT') {
+        list = list.filter(e => e.status === 'PRESENT');
+      } else if (galleryFilter === 'LATE') {
+        list = list.filter(e => e.status === 'LATE');
+      } else if (galleryFilter === 'ABSENT') {
+        list = list.filter(e => e.status === 'ABSENT' || e.status === 'NOT_CHECKED_IN');
+      } else if (galleryFilter === 'ON_LEAVE') {
+        list = list.filter(e => e.status === 'ON_LEAVE');
+      }
+
+      if (q) {
+        list = list.filter(e => 
+          (e.fullName || '').toLowerCase().includes(q) ||
+          (e.employeeCode || '').toLowerCase().includes(q) ||
+          (e.department || '').toLowerCase().includes(q) ||
+          (e.jobTitle || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full py-10 text-center text-slate-400 italic text-xs bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No workforce records found matching "${galleryFilter}".</div>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 italic text-xs">No records found matching filters.</td></tr>`;
+        return;
+      }
+
+      list.forEach(emp => {
+        const initials = (emp.fullName || 'Emp').split(' ').map(n=>n[0]).join('').slice(0, 2);
+        const statusBadge = getStatusBadge(emp.statusLabel || (emp.status === 'PRESENT' ? 'Present' : emp.status === 'LATE' ? 'Late' : emp.status === 'ON_LEAVE' ? 'On Leave' : 'Absent'));
+
+        // Grid Card
+        const card = document.createElement('div');
+        card.className = 'bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3 group';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#142B49] text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800 leading-snug group-hover:text-[#0F9D91] transition">${emp.fullName}</h4>
+                  <span class="text-[10px] text-slate-400 font-mono">${emp.employeeCode}</span>
+                </div>
+              </div>
+              <div>${statusBadge}</div>
+            </div>
+            <div class="mt-2.5 text-[11px] text-slate-500 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Department:</span>
+                <span class="font-medium text-slate-700 truncate max-w-[140px]">${emp.department}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Designation:</span>
+                <span class="font-medium text-slate-700 truncate max-w-[140px]">${emp.jobTitle}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Check-in:</span>
+                <span class="font-mono font-bold ${emp.checkInTime ? 'text-emerald-700' : 'text-slate-400'}">${emp.checkInTime || 'Not Punched'}</span>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[10px]">
+            <span class="text-slate-500 font-medium truncate max-w-[140px]">${emp.timeVarianceText || '09:00 AM shift'}</span>
+            ${emp.status !== 'PRESENT' && emp.status !== 'ON_LEAVE' ? `
+              <button onclick="quickPunchEmployee('${emp.id}', '${emp.fullName}')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] border border-teal-200 font-bold text-[10px] transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-fingerprint"></i>Punch
+              </button>
+            ` : `
+              <span class="text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-100 flex items-center gap-1">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>Verified
+              </span>
+            `}
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Table Row
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold text-slate-800 flex items-center gap-2">
+            <div class="w-6 h-6 rounded-full bg-slate-100 text-[#142B49] font-bold flex items-center justify-center text-[10px]">
+              ${initials}
+            </div>
+            <span>${emp.fullName}</span>
+          </td>
+          <td class="py-3 px-4 mono-num text-slate-600 font-bold">${emp.employeeCode}</td>
+          <td class="py-3 px-4 text-slate-600">${emp.department}</td>
+          <td class="py-3 px-4">${statusBadge}</td>
+          <td class="py-3 px-4 mono-num font-bold ${emp.checkInTime ? 'text-slate-800' : 'text-slate-400'}">${emp.checkInTime || '—'}</td>
+          <td class="py-3 px-4 text-slate-500 text-[11px]">${emp.timeVarianceText || 'Policy: 09:00 AM'}</td>
+          <td class="py-3 px-4 text-right">
+            ${emp.status !== 'PRESENT' && emp.status !== 'ON_LEAVE' ? `
+              <button onclick="quickPunchEmployee('${emp.id}', '${emp.fullName}')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] border border-teal-200 font-bold text-[11px] transition">
+                <i class="fa-solid fa-fingerprint mr-1"></i>Punch
+              </button>
+            ` : `<span class="text-emerald-600 font-bold text-[11px]"><i class="fa-solid fa-check mr-1"></i>Verified</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderGalleryPendingLeaves(q, grid, tbody) {
+      grid.innerHTML = '';
+      tbody.innerHTML = '';
+      let list = galleryLeavesCache.filter(l => l.status === 'PENDING');
+      if (q) {
+        list = list.filter(l => 
+          (l.employeeName || '').toLowerCase().includes(q) ||
+          (l.department || '').toLowerCase().includes(q) ||
+          (l.leaveType || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full py-10 text-center text-slate-400 italic text-xs bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No pending leave requests awaiting approval.</div>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 italic text-xs">No pending leaves found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(l => {
+        const initials = (l.employeeName || 'Emp').split(' ').map(n=>n[0]).join('').slice(0, 2);
+        
+        // Card
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-4 border border-purple-200/80 shadow-2xs hover:shadow-md transition flex flex-col justify-between gap-3';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">${l.employeeName}</h4>
+                  <span class="text-[10px] text-purple-600 font-semibold">${l.department}</span>
+                </div>
+              </div>
+              <span class="badge-pill bg-purple-100 text-purple-800 font-bold text-[10px]">Pending Review</span>
+            </div>
+            <div class="mt-2.5 text-[11px] text-slate-600 space-y-1">
+              <div class="flex items-center justify-between font-semibold">
+                <span>${l.leaveType}</span>
+                <span class="mono-num text-purple-700">${l.totalDays} Day(s)</span>
+              </div>
+              <div class="text-[10px] text-slate-400 mono-num">${l.startDate} &rarr; ${l.endDate}</div>
+              <p class="text-[11px] text-slate-500 italic mt-1 line-clamp-2">"${l.reason}"</p>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end">
+            <button onclick="openModalReviewLeave('${l.id}', '${l.employeeName}', '${l.leaveType}', ${l.totalDays}, '${l.reason}')" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-signature"></i> Review Request
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Row
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${l.employeeName}</td>
+          <td class="py-3 px-4 text-slate-400 mono-num">—</td>
+          <td class="py-3 px-4 text-slate-600">${l.department}</td>
+          <td class="py-3 px-4"><span class="badge-pill bg-purple-100 text-purple-800 font-bold text-[10px]">Pending</span></td>
+          <td class="py-3 px-4 mono-num text-slate-600">${l.startDate}</td>
+          <td class="py-3 px-4 text-slate-500 text-[11px]">${l.leaveType} (${l.totalDays}d) - ${l.reason}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="openModalReviewLeave('${l.id}', '${l.employeeName}', '${l.leaveType}', ${l.totalDays}, '${l.reason}')" class="px-3 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition">
+              Review &rarr;
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderGalleryPendingLoans(q, grid, tbody) {
+      grid.innerHTML = '';
+      tbody.innerHTML = '';
+      let list = galleryLoansCache.filter(l => l.status === 'PENDING');
+      if (q) {
+        list = list.filter(l => 
+          (l.employeeName || '').toLowerCase().includes(q) ||
+          (l.department || '').toLowerCase().includes(q) ||
+          (l.loanType || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full py-10 text-center text-slate-400 italic text-xs bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No pending loan applications awaiting review.</div>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 italic text-xs">No pending loans found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(loan => {
+        const initials = (loan.employeeName || 'Emp').split(' ').map(n=>n[0]).join('').slice(0, 2);
+        
+        // Card
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-4 border border-indigo-200/80 shadow-2xs hover:shadow-md transition flex flex-col justify-between gap-3';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">${loan.employeeName}</h4>
+                  <span class="text-[10px] text-indigo-600 font-semibold">${loan.department}</span>
+                </div>
+              </div>
+              <span class="badge-pill bg-indigo-100 text-indigo-800 font-bold text-[10px]">Awaiting Signoff</span>
+            </div>
+            <div class="mt-2.5 text-[11px] text-slate-600 space-y-1">
+              <div class="flex items-center justify-between font-semibold">
+                <span>${loan.loanType}</span>
+                <span class="mono-num text-indigo-700 font-bold">PKR ${loan.amountRequested.toLocaleString()}</span>
+              </div>
+              <div class="text-[10px] text-slate-400">Tenure: ${loan.tenureMonths} Months (${loan.repaymentStartDate})</div>
+              <p class="text-[11px] text-slate-500 italic mt-1 line-clamp-2">"${loan.reason}"</p>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end">
+            <button onclick="openModalReviewLoan('${loan.id}', '${loan.employeeName}', '${loan.loanType}', ${loan.amountRequested}, ${loan.tenureMonths}, '${loan.reason}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-coins"></i> Review Application
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Row
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${loan.employeeName}</td>
+          <td class="py-3 px-4 text-slate-400 mono-num">—</td>
+          <td class="py-3 px-4 text-slate-600">${loan.department}</td>
+          <td class="py-3 px-4"><span class="badge-pill bg-indigo-100 text-indigo-800 font-bold text-[10px]">Pending</span></td>
+          <td class="py-3 px-4 mono-num text-slate-600">${loan.applicationDate}</td>
+          <td class="py-3 px-4 text-slate-500 text-[11px]">${loan.loanType} (PKR ${loan.amountRequested.toLocaleString()}) - ${loan.reason}</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="openModalReviewLoan('${loan.id}', '${loan.employeeName}', '${loan.loanType}', ${loan.amountRequested}, ${loan.tenureMonths}, '${loan.reason}')" class="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition">
+              Review &rarr;
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderGalleryPayroll(q, grid, tbody) {
+      grid.innerHTML = '';
+      tbody.innerHTML = '';
+      let list = [...galleryPayrollCache];
+      if (q) {
+        list = list.filter(p => 
+          (p.employeeName || '').toLowerCase().includes(q) ||
+          (p.employeeCode || '').toLowerCase().includes(q) ||
+          (p.department || '').toLowerCase().includes(q) ||
+          (p.designation || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="col-span-full py-10 text-center text-slate-400 italic text-xs bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">No payroll records found.</div>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 italic text-xs">No payroll records found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(p => {
+        const initials = (p.employeeName || 'Emp').split(' ').map(n=>n[0]).join('').slice(0, 2);
+        
+        // Card
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-4 border border-teal-200/80 shadow-2xs hover:shadow-md transition flex flex-col justify-between gap-3';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-[#0F9D91] text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">${p.employeeName}</h4>
+                  <span class="text-[10px] text-slate-400 font-mono">${p.employeeCode}</span>
+                </div>
+              </div>
+              <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold text-[10px]">${p.status || 'PROCESSED'}</span>
+            </div>
+            <div class="mt-2.5 text-[11px] text-slate-600 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Department:</span>
+                <span class="font-medium text-slate-700 truncate max-w-[140px]">${p.department}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400">Gross Salary:</span>
+                <span class="mono-num text-slate-700">PKR ${p.grossSalary.toLocaleString()}</span>
+              </div>
+              <div class="flex items-center justify-between font-bold text-slate-800 pt-1 border-t border-slate-100">
+                <span>Net Disbursed:</span>
+                <span class="mono-num text-teal-700">PKR ${p.netSalary.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-end">
+            <button onclick="downloadSalarySlip('${p.employeeId}', '${p.employeeName}')" class="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pdf"></i> Payslip PDF
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Row
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${p.employeeName}</td>
+          <td class="py-3 px-4 mono-num text-slate-600 font-bold">${p.employeeCode}</td>
+          <td class="py-3 px-4 text-slate-600">${p.department}</td>
+          <td class="py-3 px-4"><span class="badge-pill bg-emerald-100 text-emerald-800 font-bold text-[10px]">${p.status || 'PAID'}</span></td>
+          <td class="py-3 px-4 mono-num text-slate-800 font-bold">PKR ${p.netSalary.toLocaleString()}</td>
+          <td class="py-3 px-4 text-slate-500 text-[11px]">Gross: PKR ${p.grossSalary.toLocaleString()} (Tax/Ded: PKR ${p.totalDeductions.toLocaleString()})</td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="downloadSalarySlip('${p.employeeId}', '${p.employeeName}')" class="px-3 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition">
+              <i class="fa-solid fa-file-pdf mr-1"></i>PDF
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+
+    function renderDashboardDonut(data) {
+      const total = data.totalEmployees || 1;
+      document.getElementById('donutCenterTotal').innerText = data.totalEmployees;
+      document.getElementById('donutPresentVal').innerText = data.presentToday;
+      document.getElementById('donutLateVal').innerText = data.lateArrivalsToday;
+      document.getElementById('donutAbsentVal').innerText = data.absentToday;
+      document.getElementById('donutLeaveVal').innerText = data.onLeaveToday;
+
+      const slices = [
+        { count: data.presentToday, color: '#16A34A' },
+        { count: data.lateArrivalsToday, color: '#F59E0B' },
+        { count: data.absentToday, color: '#DC2626' },
+        { count: data.onLeaveToday, color: '#2563EB' },
+      ];
+
+      const svg = document.getElementById('dashboardDonutSvg');
+      svg.innerHTML = '';
+      const circumference = 2 * Math.PI * 40; // r=40
+      let accumulated = 0;
+
+      slices.forEach(slice => {
+        const percent = slice.count / total;
+        const strokeLength = percent * circumference;
+        const strokeDasharray = `${strokeLength} ${circumference - strokeLength}`;
+        const strokeDashoffset = -accumulated;
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '50');
+        circle.setAttribute('cy', '50');
+        circle.setAttribute('r', '40');
+        circle.setAttribute('fill', 'transparent');
+        circle.setAttribute('stroke', slice.color);
+        circle.setAttribute('stroke-width', '16');
+        circle.setAttribute('stroke-dasharray', strokeDasharray);
+        circle.setAttribute('stroke-dashoffset', strokeDashoffset);
+        svg.appendChild(circle);
+
+        accumulated += strokeLength;
+      });
+    }
+
+    function renderMonthlyTrends(trends) {
+      const container = document.getElementById('monthlyTrendsContainer');
+      container.innerHTML = '';
+      if (!trends || !trends.length) return;
+
+      trends.forEach(t => {
+        const total = t.presentAvg + t.absentAvg + t.lateAvg || 1;
+        const presentH = Math.round((t.presentAvg / total) * 120);
+        const lateH = Math.round((t.lateAvg / total) * 120);
+        const absentH = Math.round((t.absentAvg / total) * 120);
+
+        const col = document.createElement('div');
+        col.className = 'flex-1 flex flex-col items-center gap-1.5 h-full justify-end';
+        col.innerHTML = `
+          <div class="w-full max-w-[38px] flex flex-col justify-end gap-0.5 rounded-lg overflow-hidden bg-slate-100 p-0.5">
+            <div style="height: ${absentH}px" class="bg-[#DC2626] rounded-xs transition-all duration-300" title="Absent: ${t.absentAvg}"></div>
+            <div style="height: ${lateH}px" class="bg-[#F59E0B] rounded-xs transition-all duration-300" title="Late: ${t.lateAvg}"></div>
+            <div style="height: ${presentH}px" class="bg-[#16A34A] rounded-xs transition-all duration-300" title="Present: ${t.presentAvg}"></div>
+          </div>
+          <span class="text-[10px] font-bold text-slate-500 uppercase">${t.month.slice(0, 3)}</span>
+        `;
+        container.appendChild(col);
+      });
+    }
+
+    function renderDeptAttendance(deptList) {
+      const container = document.getElementById('deptAttendanceList');
+      container.innerHTML = '';
+      if (!deptList || !deptList.length) return;
+
+      deptList.forEach(dept => {
+        const div = document.createElement('div');
+        div.className = 'space-y-1';
+        div.innerHTML = `
+          <div class="flex items-center justify-between text-xs font-semibold">
+            <span class="text-slate-700 truncate">${dept.department}</span>
+            <span class="text-slate-800 mono-num">${dept.present}/${dept.total} <span class="text-[10px] text-slate-400">(${dept.presentRate}%)</span></span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+            <div style="width: ${dept.presentRate}%" class="bg-[#0F9D91] h-full"></div>
+            <div style="width: ${Math.round((dept.late / (dept.total || 1)) * 100)}%" class="bg-amber-400 h-full"></div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderUpcomingHolidays(holidays) {
+      const container = document.getElementById('upcomingHolidaysList');
+      container.innerHTML = '';
+      if (!holidays || !holidays.length) {
+        container.innerHTML = '<p class="text-xs text-slate-400 py-2">No upcoming public holidays.</p>';
+        return;
+      }
+
+      holidays.slice(0, 4).forEach(h => {
+        const card = document.createElement('div');
+        card.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition';
+        card.innerHTML = `
+          <div class="overflow-hidden">
+            <div class="text-xs font-bold text-slate-800 truncate">${h.title}</div>
+            <div class="text-[10px] text-slate-400">${h.dayOfWeek} &bull; ${h.holidayType}</div>
+          </div>
+          <span class="text-xs font-bold text-[#0F9D91] mono-num bg-teal-50 px-2 py-0.5 rounded border border-teal-100 flex-shrink-0">${h.date.slice(5)}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderRecentActivities(activities) {
+      const container = document.getElementById('recentActivityList');
+      container.innerHTML = '';
+      if (!activities || !activities.length) {
+        container.innerHTML = '<p class="text-xs text-slate-400 py-2">No recent employee activities.</p>';
+        return;
+      }
+
+      activities.slice(0, 5).forEach(act => {
+        const item = document.createElement('div');
+        item.className = 'flex items-start gap-2.5 text-xs';
+        item.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 text-slate-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
+            ${act.avatarInitials || 'EM'}
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <div class="font-bold text-slate-800 leading-tight">${act.title}</div>
+            <div class="text-[11px] text-slate-500 truncate">${act.description}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 2: EMPLOYEE ATTENDANCE MONITORING
+     * =========================================================================
+     */
+    async function loadAttendanceMonitoring() {
+      try {
+        const dept = document.getElementById('attendanceDeptFilter')?.value || 'ALL';
+        const status = document.getElementById('attendanceStatusFilter')?.value || 'ALL';
+        const res = await fetch(`/api/v1/attendance/manager-monitoring?department=${encodeURIComponent(dept)}&status=${encodeURIComponent(status)}&date=${globalSelectedDate}`);
+        const json = await res.json();
+        const employees = json.employees || (json.data && json.data.employees) || [];
+        renderAttendanceTable(employees);
+      } catch (err) {
+        console.error('Failed to load attendance monitoring:', err);
+      }
+    }
+
+    function renderAttendanceTable(employees) {
+      const tbody = document.getElementById('attendanceTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!employees || !employees.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400 font-medium">No attendance records found matching current filters.</td></tr>`;
+        return;
+      }
+
+      employees.forEach(emp => {
+        const statusBadge = getStatusBadge(emp.status, emp.statusLabel);
+        const name = emp.fullName || emp.employeeName || 'Unknown Employee';
+        const empCode = emp.employeeCode || emp.code || '—';
+        const empId = emp.id || emp.employeeId || empCode;
+        const dept = emp.department || '—';
+        const initials = name.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('');
+        const isVerified = (emp.status === 'PRESENT' || emp.status === 'Present');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition employee-row border-b border-slate-100 last:border-0';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-semibold text-slate-800 flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-full bg-teal-50 text-[#0F9D91] font-bold flex items-center justify-center text-xs">
+              ${initials}
+            </div>
+            <span>${name}</span>
+          </td>
+          <td class="py-3 px-4 mono-num text-slate-600 font-bold">${empCode}</td>
+          <td class="py-3 px-4 text-slate-600">${dept}</td>
+          <td class="py-3 px-4 text-slate-500 font-medium">09:00 AM &bull; 11:00 AM cutoff</td>
+          <td class="py-3 px-4 mono-num font-bold ${emp.checkInTime ? 'text-slate-800' : 'text-slate-400'}">${emp.checkInTime || '—'}</td>
+          <td class="py-3 px-4 mono-num text-slate-500">${emp.checkOutTime || '—'}</td>
+          <td class="py-3 px-4 text-center">${statusBadge}</td>
+          <td class="py-3 px-4 text-right">
+            ${!isVerified ? `
+              <button onclick="quickPunchEmployee('${empId}', '${name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] border border-teal-200 font-bold text-[11px] transition">
+                <i class="fa-solid fa-fingerprint mr-1"></i>Punch
+              </button>
+            ` : `<span class="text-emerald-600 font-bold text-[11px]"><i class="fa-solid fa-check mr-1"></i>Verified</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getStatusBadge(status, label) {
+      const s = (status || '').toUpperCase();
+      const text = label || (s === 'PRESENT' ? 'Present' : s === 'LATE' ? 'Late' : s === 'ON_LEAVE' ? 'On Leave' : s === 'NOT_CHECKED_IN' ? 'Not Checked In' : 'Absent');
+      if (s === 'PRESENT') {
+        return `<span class="badge-pill bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-circle-check text-emerald-600"></i> ${text}</span>`;
+      } else if (s === 'LATE') {
+        return `<span class="badge-pill bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock text-amber-600"></i> ${text}</span>`;
+      } else if (s === 'ON_LEAVE') {
+        return `<span class="badge-pill bg-blue-100 text-blue-800 border border-blue-200"><i class="fa-solid fa-plane text-blue-600"></i> ${text}</span>`;
+      } else if (s === 'NOT_CHECKED_IN') {
+        return `<span class="badge-pill bg-rose-50 text-rose-700 border border-rose-200"><i class="fa-solid fa-clock-rotate-left text-rose-500"></i> ${text}</span>`;
+      } else {
+        return `<span class="badge-pill bg-rose-100 text-rose-800 border border-rose-200"><i class="fa-solid fa-circle-xmark text-rose-600"></i> ${text}</span>`;
+      }
+    }
+
+    function filterAttendanceTableClientSide() {
+      const q = document.getElementById('attendanceSearchInput').value.toLowerCase();
+      document.querySelectorAll('.employee-row').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    async function quickPunchEmployee(employeeId, employeeName) {
+      if (!confirm(`Register instant biometric verification check-in for ${employeeName}?`)) return;
+      try {
+        const res = await fetch('/api/v1/attendance/manager-quick-punch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId, date: globalSelectedDate })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Checked in ${employeeName} successfully`, 'success');
+          loadAttendanceMonitoring();
+        } else {
+          showToast(json.message || 'Check-in failed', 'error');
+        }
+      } catch (err) {
+        showToast('Network error during quick punch', 'error');
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 3: LEAVE MANAGEMENT & MAP OVERVIEW
+     * =========================================================================
+     */
+    function switchLeaveSubView(mode) {
+      if (mode === 'table') {
+        document.getElementById('leaveSubViewTable').classList.remove('hidden');
+        document.getElementById('leaveSubViewMap').classList.add('hidden');
+        document.getElementById('subLeaveTabTable').className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-2xs';
+        document.getElementById('subLeaveTabMap').className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-500 hover:text-slate-800';
+      } else {
+        document.getElementById('leaveSubViewTable').classList.add('hidden');
+        document.getElementById('leaveSubViewMap').classList.remove('hidden');
+        document.getElementById('subLeaveTabMap').className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-white text-slate-800 shadow-2xs';
+        document.getElementById('subLeaveTabTable').className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-500 hover:text-slate-800';
+        initLeaveMap();
+      }
+    }
+
+    async function loadLeaves() {
+      try {
+        const status = document.getElementById('leaveStatusFilter').value;
+        const dept = document.getElementById('leaveDeptFilter').value;
+        const res = await fetch(`/api/v1/hrms/leaves?status=${status}&department=${encodeURIComponent(dept)}`);
+        const json = await res.json();
+        if (!json.success) return;
+
+        const leaves = json.data || [];
+        renderLeavesTable(leaves);
+      } catch (err) {
+        console.error('Failed to load leaves:', err);
+      }
+    }
+
+    function renderLeavesTable(leaves) {
+      const tbody = document.getElementById('leaveTableBody');
+      tbody.innerHTML = '';
+      if (!leaves.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">No leave applications found matching filter.</td></tr>`;
+        return;
+      }
+
+      leaves.forEach(l => {
+        let badge = '<span class="badge-pill bg-slate-100 text-slate-700">PENDING</span>';
+        if (l.status === 'APPROVED') badge = '<span class="badge-pill bg-emerald-100 text-emerald-800 font-bold">APPROVED</span>';
+        else if (l.status === 'REJECTED') badge = '<span class="badge-pill bg-rose-100 text-rose-800 font-bold">REJECTED</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${l.employeeName}</td>
+          <td class="py-3 px-4 text-slate-600">${l.department}</td>
+          <td class="py-3 px-4 font-semibold text-slate-700">${l.leaveType}</td>
+          <td class="py-3 px-4 mono-num text-slate-600">${l.startDate} &rarr; ${l.endDate}</td>
+          <td class="py-3 px-4 font-bold text-slate-800 mono-num">${l.totalDays} day(s)</td>
+          <td class="py-3 px-4 text-slate-500 truncate max-w-xs">${l.reason}</td>
+          <td class="py-3 px-4 text-center">${badge}</td>
+          <td class="py-3 px-4 text-right">
+            ${l.status === 'PENDING' ? `
+              <button onclick="openModalReviewLeave('${l.id}', '${l.employeeName}', '${l.leaveType}', ${l.totalDays}, '${l.reason}')" class="px-3 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition">
+                Review &rarr;
+              </button>
+            ` : `<span class="text-slate-400 text-xs">${l.status}</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModalReviewLeave(id, name, type, days, reason) {
+      document.getElementById('reviewLeaveId').value = id;
+      document.getElementById('reviewLeaveSummary').innerHTML = `
+        <div class="font-bold text-slate-800 text-sm">${name}</div>
+        <div class="text-slate-600">${type} &bull; <strong>${days} Days</strong></div>
+        <div class="text-slate-500 text-[11px] mt-1">${reason}</div>
+      `;
+      document.getElementById('reviewLeaveReason').value = '';
+      document.getElementById('modalReviewLeave').classList.remove('hidden');
+    }
+
+    function closeModalReviewLeave() {
+      document.getElementById('modalReviewLeave').classList.add('hidden');
+    }
+
+    async function submitLeaveDecision(decision) {
+      const id = document.getElementById('reviewLeaveId').value;
+      const reason = document.getElementById('reviewLeaveReason').value;
+
+      try {
+        const res = await fetch(`/api/v1/hrms/leaves/${id}/review`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision, rejectionReason: reason, reviewedBy: 'Sajjad Ali' })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Leave application ${decision.toLowerCase()} successfully`, 'success');
+          closeModalReviewLeave();
+          loadLeaves();
+          loadDashboard();
+        } else {
+          showToast(json.message || 'Operation failed', 'error');
+        }
+      } catch (err) {
+        showToast('Error reviewing leave application', 'error');
+      }
+    }
+
+    async function initLeaveMap() {
+      try {
+        const res = await fetch('/api/v1/hrms/leaves/map-overview');
+        const json = await res.json();
+        if (!json.success) return;
+        const branches = json.data || [];
+
+        // Initialize Leaflet Map
+        if (!leaveLeafletInstance) {
+          leaveLeafletInstance = L.map('leaveLeafletMap').setView([29.0, 72.0], 6);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap'
+          }).addTo(leaveLeafletInstance);
+        } else {
+          setTimeout(() => leaveLeafletInstance.invalidateSize(), 100);
+        }
+
+        // Render Cards and Markers
+        const cardsContainer = document.getElementById('branchLeaveCards');
+        cardsContainer.innerHTML = '';
+
+        branches.forEach(b => {
+          // Marker
+          const markerColor = b.employeesOnLeaveCount > 0 ? '#2563EB' : '#0F9D91';
+          const icon = L.divIcon({
+            className: 'custom-pin',
+            html: `<div style="background-color: ${markerColor}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.4); color: white; font-size: 11px; font-weight: bold;">${b.employeesOnLeaveCount}</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+
+          L.marker([b.latitude, b.longitude], { icon })
+            .addTo(leaveLeafletInstance)
+            .bindPopup(`<b>${b.officeName}</b><br>Assigned Staff: ${b.totalAssignedEmployees}<br>On Leave Today: ${b.employeesOnLeaveCount}`);
+
+          // Card
+          const card = document.createElement('div');
+          card.className = 'bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2';
+          card.innerHTML = `
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span class="font-bold text-slate-800 text-xs">${b.officeName} (${b.city})</span>
+              <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                ${b.employeesOnLeaveCount} on leave
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-500">
+              Total Assigned Workforce: <strong>${b.totalAssignedEmployees}</strong>
+            </div>
+            <div class="space-y-1 pt-1">
+              ${b.employeesOnLeave && b.employeesOnLeave.length ? b.employeesOnLeave.map(emp => `
+                <div class="p-1.5 bg-slate-50 rounded-lg text-xs flex items-center justify-between">
+                  <span class="font-semibold text-slate-700">${emp.employeeName}</span>
+                  <span class="text-[10px] text-blue-600 font-bold">${emp.leaveType}</span>
+                </div>
+              `).join('') : '<div class="text-[11px] text-slate-400 italic">No employees on leave from this branch today.</div>'}
+            </div>
+          `;
+          cardsContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('Failed to init leave map:', err);
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 4: LOAN MANAGEMENT
+     * =========================================================================
+     */
+    async function loadLoans() {
+      try {
+        const status = document.getElementById('loanStatusFilter').value;
+        const res = await fetch(`/api/v1/hrms/loans?status=${status}`);
+        const json = await res.json();
+        if (!json.success) return;
+
+        const loans = json.data || [];
+        const summary = json.summary || {};
+
+        document.getElementById('loanStatTotal').innerText = summary.totalLoans || loans.length;
+        document.getElementById('loanStatActive').innerText = summary.activeLoansCount || 0;
+        document.getElementById('loanStatApprovedAmt').innerText = `PKR ${((summary.totalApprovedAmount || 0) / 1000000).toFixed(2)}M`;
+        document.getElementById('loanStatOutstanding').innerText = `PKR ${(summary.totalOutstandingBalance || 0).toLocaleString()}`;
+
+        renderLoansTable(loans);
+      } catch (err) {
+        console.error('Failed to load loans:', err);
+      }
+    }
+
+    function renderLoansTable(loans) {
+      const tbody = document.getElementById('loanTableBody');
+      tbody.innerHTML = '';
+      if (!loans.length) {
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400">No loan applications found.</td></tr>`;
+        return;
+      }
+
+      loans.forEach(loan => {
+        let badge = '<span class="badge-pill bg-slate-100 text-slate-700">PENDING</span>';
+        if (loan.status === 'APPROVED' || loan.status === 'DISBURSED') badge = '<span class="badge-pill bg-emerald-100 text-emerald-800 font-bold">APPROVED</span>';
+        else if (loan.status === 'REJECTED') badge = '<span class="badge-pill bg-rose-100 text-rose-800 font-bold">REJECTED</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${loan.employeeName}</td>
+          <td class="py-3 px-4 text-slate-600">${loan.loanType}</td>
+          <td class="py-3 px-4 mono-num text-slate-500">${loan.appliedDate}</td>
+          <td class="py-3 px-4 text-right mono-num font-bold text-slate-800">PKR ${loan.requestedAmount.toLocaleString()}</td>
+          <td class="py-3 px-4 text-right mono-num font-bold text-emerald-600">${loan.approvedAmount ? `PKR ${loan.approvedAmount.toLocaleString()}` : '—'}</td>
+          <td class="py-3 px-4 text-center mono-num">${loan.repaymentMonths || '—'}</td>
+          <td class="py-3 px-4 text-right mono-num text-slate-700">${loan.monthlyInstallment ? `PKR ${loan.monthlyInstallment.toLocaleString()}` : '—'}</td>
+          <td class="py-3 px-4 text-right mono-num font-bold text-amber-600">PKR ${loan.outstandingBalance.toLocaleString()}</td>
+          <td class="py-3 px-4 text-center">${badge}</td>
+          <td class="py-3 px-4 text-right">
+            ${loan.status === 'PENDING' ? `
+              <button onclick="openModalReviewLoan('${loan.id}', '${loan.employeeName}', '${loan.loanType}', ${loan.requestedAmount}, ${loan.repaymentMonths || 12})" class="px-3 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition">
+                Review &rarr;
+              </button>
+            ` : `<span class="text-slate-400 text-xs">${loan.status}</span>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModalReviewLoan(id, name, type, amount, months) {
+      document.getElementById('reviewLoanId').value = id;
+      document.getElementById('reviewLoanSummary').innerHTML = `
+        <div class="font-bold text-slate-800 text-sm">${name}</div>
+        <div class="text-slate-600">${type} &bull; Requested: <strong>PKR ${amount.toLocaleString()}</strong></div>
+      `;
+      document.getElementById('reviewLoanApprovedAmt').value = amount;
+      document.getElementById('reviewLoanMonths').value = months || 12;
+      document.getElementById('reviewLoanReason').value = '';
+      document.getElementById('modalReviewLoan').classList.remove('hidden');
+    }
+
+    function closeModalReviewLoan() {
+      document.getElementById('modalReviewLoan').classList.add('hidden');
+    }
+
+    async function submitLoanDecision(decision) {
+      const id = document.getElementById('reviewLoanId').value;
+      const approvedAmount = Number(document.getElementById('reviewLoanApprovedAmt').value);
+      const repaymentMonths = Number(document.getElementById('reviewLoanMonths').value);
+      const reason = document.getElementById('reviewLoanReason').value;
+
+      try {
+        const res = await fetch(`/api/v1/hrms/loans/${id}/review`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision, approvedAmount, repaymentMonths, rejectionReason: reason, reviewerName: 'Finance Controller' })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Loan application ${decision.toLowerCase()} successfully`, 'success');
+          closeModalReviewLoan();
+          loadLoans();
+          loadDashboard();
+        } else {
+          showToast(json.message || 'Operation failed', 'error');
+        }
+      } catch (err) {
+        showToast('Error reviewing loan application', 'error');
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 5: EMPLOYEE MANAGEMENT & REGISTRATION
+     * =========================================================================
+     */
+    async function loadEmployees() {
+      try {
+        const search = document.getElementById('employeeSearchInput')?.value || '';
+        const dept = document.getElementById('employeeDeptFilter')?.value || 'ALL';
+        const res = await fetch(`/api/v1/hrms/employees?search=${encodeURIComponent(search)}&department=${encodeURIComponent(dept)}`);
+        const json = await res.json();
+        if (!json.success) return;
+
+        allEmployeesCache = json.data || [];
+        renderEmployeesTable(allEmployeesCache);
+      } catch (err) {
+        console.error('Failed to load employees:', err);
+      }
+    }
+
+    function renderEmployeesTable(employees) {
+      const tbody = document.getElementById('employeeTableBody');
+      tbody.innerHTML = '';
+      if (!employees.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">No employees found.</td></tr>`;
+        return;
+      }
+
+      employees.forEach(emp => {
+        const isActive = emp.employmentStatus === 'ACTIVE';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800 flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">
+              ${emp.fullName.split(' ').map(n=>n[0]).join('')}
+            </div>
+            <span>${emp.fullName}</span>
+          </td>
+          <td class="py-3 px-4 mono-num text-slate-600 font-bold">${emp.employeeCode}</td>
+          <td class="py-3 px-4 text-slate-700 font-medium">${emp.jobTitle}</td>
+          <td class="py-3 px-4 text-slate-600">${emp.department}</td>
+          <td class="py-3 px-4 text-slate-500">${emp.branchName || 'Headquarters'}</td>
+          <td class="py-3 px-4 text-slate-500">${emp.contactNumber || '—'}</td>
+          <td class="py-3 px-4 text-right mono-num font-bold text-slate-800">PKR ${(emp.basicSalary || 0).toLocaleString()}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="badge-pill ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'} font-bold">
+              ${emp.employmentStatus}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="toggleEmployeeStatus('${emp.id}')" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition">
+              ${isActive ? 'Suspend' : 'Activate'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModalAddEmployee() {
+      document.getElementById('formAddEmployee').reset();
+      document.getElementById('addEmployeeError').classList.add('hidden');
+      document.getElementById('modalAddEmployee').classList.remove('hidden');
+    }
+
+    function closeModalAddEmployee() {
+      document.getElementById('modalAddEmployee').classList.add('hidden');
+    }
+
+    async function handleCreateEmployee(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('addEmployeeError');
+      errBox.classList.add('hidden');
+
+      const payload = {
+        fullName: document.getElementById('newEmpFullName').value.trim(),
+        employeeCode: document.getElementById('newEmpCode').value.trim().toUpperCase(),
+        email: document.getElementById('newEmpEmail').value.trim().toLowerCase(),
+        contactNumber: document.getElementById('newEmpPhone').value.trim(),
+        department: document.getElementById('newEmpDept').value,
+        jobTitle: document.getElementById('newEmpTitle').value.trim(),
+        basicSalary: Number(document.getElementById('newEmpSalary').value),
+        branchName: document.getElementById('newEmpBranch').value,
+        employmentStatus: 'ACTIVE',
+      };
+
+      try {
+        const res = await fetch('/api/v1/hrms/employees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Employee ${payload.fullName} registered successfully!`, 'success');
+          closeModalAddEmployee();
+          loadEmployees();
+          loadDashboard();
+        } else {
+          errBox.innerText = json.message || 'Failed to create employee';
+          errBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        errBox.innerText = 'Server error during employee creation';
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function toggleEmployeeStatus(id) {
+      try {
+        const res = await fetch(`/api/v1/hrms/employees/${id}/status`, { method: 'PUT' });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Status toggled to ${json.data.employmentStatus}`, 'info');
+          loadEmployees();
+          loadDashboard();
+        }
+      } catch (err) {
+        showToast('Error toggling employee status', 'error');
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 6: PAYROLL MANAGEMENT
+     * =========================================================================
+     */
+    async function loadPayroll() {
+      try {
+        const month = document.getElementById('payrollMonthSelect').value;
+        const res = await fetch(`/api/v1/hrms/payroll?month=${encodeURIComponent(month)}`);
+        const json = await res.json();
+        if (!json.success) return;
+
+        const data = json.data;
+        document.getElementById('payrollGrossTotal').innerText = `PKR ${(data.summary.totalGross).toLocaleString()}`;
+        document.getElementById('payrollDeductionsTotal').innerText = `PKR ${(data.summary.totalDeductions).toLocaleString()}`;
+        document.getElementById('payrollNetTotal').innerText = `PKR ${(data.summary.totalNet).toLocaleString()}`;
+
+        renderPayrollTable(data.records || []);
+      } catch (err) {
+        console.error('Failed to load payroll:', err);
+      }
+    }
+
+    function renderPayrollTable(records) {
+      const tbody = document.getElementById('payrollTableBody');
+      tbody.innerHTML = '';
+      if (!records.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">No payroll records for selected month.</td></tr>`;
+        return;
+      }
+
+      records.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${r.employeeName}</td>
+          <td class="py-3 px-4 text-slate-600">${r.department}</td>
+          <td class="py-3 px-4 text-right mono-num text-slate-700">PKR ${r.basicSalary.toLocaleString()}</td>
+          <td class="py-3 px-4 text-right mono-num font-bold text-slate-800">PKR ${r.grossSalary.toLocaleString()}</td>
+          <td class="py-3 px-4 text-right mono-num text-rose-600">-PKR ${r.taxDeductions.toLocaleString()}</td>
+          <td class="py-3 px-4 text-right mono-num text-amber-600">${r.loanInstallmentDeduction ? `-PKR ${r.loanInstallmentDeduction.toLocaleString()}` : '—'}</td>
+          <td class="py-3 px-4 text-right mono-num font-black text-emerald-700">PKR ${r.netSalary.toLocaleString()}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold">${r.status}</span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <a href="/api/v1/payroll/salary-slip?format=pdf&month=${encodeURIComponent(r.month)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition">
+              <i class="fa-solid fa-download mr-1"></i>PDF
+            </a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 7: PUBLIC HOLIDAYS
+     * =========================================================================
+     */
+    async function loadHolidays() {
+      try {
+        const res = await fetch('/api/v1/hrms/holidays');
+        const json = await res.json();
+        if (!json.success) return;
+
+        renderHolidaysTable(json.data || []);
+      } catch (err) {
+        console.error('Failed to load holidays:', err);
+      }
+    }
+
+    function renderHolidaysTable(holidays) {
+      const tbody = document.getElementById('holidaysTableBody');
+      tbody.innerHTML = '';
+      if (!holidays.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">No holidays on calendar.</td></tr>`;
+        return;
+      }
+
+      holidays.forEach(h => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-800">${h.title}</td>
+          <td class="py-3 px-4 mono-num font-semibold text-slate-700">${h.date}</td>
+          <td class="py-3 px-4 text-slate-600">${h.dayOfWeek}</td>
+          <td class="py-3 px-4 text-slate-600">${h.holidayType}</td>
+          <td class="py-3 px-4 text-slate-500">${h.appliesTo}</td>
+          <td class="py-3 px-4 text-slate-500 truncate max-w-xs">${h.description}</td>
+          <td class="py-3 px-4 text-center">
+            <span class="badge-pill ${h.isPassed ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800 font-bold'}">
+              ${h.isPassed ? 'Passed' : 'Upcoming'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="deleteHoliday('${h.id}', '${h.title}')" class="text-rose-600 hover:text-rose-800 p-1 rounded transition" title="Delete Holiday">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModalAddHoliday() {
+      document.getElementById('formAddHoliday').reset();
+      document.getElementById('modalAddHoliday').classList.remove('hidden');
+    }
+
+    function closeModalAddHoliday() {
+      document.getElementById('modalAddHoliday').classList.add('hidden');
+    }
+
+    async function handleCreateHoliday(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('newHolidayTitle').value.trim(),
+        date: document.getElementById('newHolidayDate').value,
+        holidayType: document.getElementById('newHolidayType').value,
+        description: document.getElementById('newHolidayDesc').value.trim(),
+        appliesTo: 'ALL',
+      };
+
+      try {
+        const res = await fetch('/api/v1/hrms/holidays', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Holiday added successfully!`, 'success');
+          closeModalAddHoliday();
+          loadHolidays();
+          loadDashboard();
+        }
+      } catch (err) {
+        showToast('Error creating holiday', 'error');
+      }
+    }
+
+    async function deleteHoliday(id, title) {
+      if (!confirm(`Remove holiday "${title}" from the calendar?`)) return;
+      try {
+        const res = await fetch(`/api/v1/hrms/holidays/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Holiday removed`, 'info');
+          loadHolidays();
+          loadDashboard();
+        }
+      } catch (err) {
+        showToast('Error removing holiday', 'error');
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 8: INDIVIDUAL EMPLOYEE REPORTS
+     * =========================================================================
+     */
+    async function loadReportsModule() {
+      try {
+        // Fetch employees list if not cached
+        if (!allEmployeesCache.length) {
+          const empRes = await fetch('/api/v1/hrms/employees');
+          const empJson = await empRes.json();
+          allEmployeesCache = empJson.data || [];
+        }
+
+        // Populate employee dropdown
+        const select = document.getElementById('reportEmployeeSelect');
+        select.innerHTML = '';
+        allEmployeesCache.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp.id;
+          opt.innerText = `${emp.fullName} (${emp.employeeCode}) - ${emp.jobTitle}`;
+          select.appendChild(opt);
+        });
+
+        // Trigger report generation for first employee
+        if (allEmployeesCache.length) {
+          await loadEmployeeReport();
+        }
+      } catch (err) {
+        console.error('Failed to init reports:', err);
+      }
+    }
+
+    function onReportPeriodChange(period) {
+      const today = new Date();
+      const formatDate = (d) => d.toISOString().split('T')[0];
+
+      if (period === 'MONTHLY') {
+        document.getElementById('reportFromDate').value = '2026-11-01';
+        document.getElementById('reportToDate').value = '2026-11-19';
+      } else if (period === 'BI_WEEKLY') {
+        const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+        document.getElementById('reportFromDate').value = formatDate(twoWeeksAgo);
+        document.getElementById('reportToDate').value = formatDate(today);
+      } else if (period === 'YEARLY') {
+        document.getElementById('reportFromDate').value = '2026-01-01';
+        document.getElementById('reportToDate').value = '2026-12-31';
+      }
+      loadEmployeeReport();
+    }
+
+    async function loadEmployeeReport() {
+      const employeeId = document.getElementById('reportEmployeeSelect').value;
+      const period = document.getElementById('reportPeriodSelect').value;
+      const from = document.getElementById('reportFromDate').value;
+      const to = document.getElementById('reportToDate').value;
+      if (!employeeId) return;
+
+      try {
+        const res = await fetch(`/api/v1/hrms/reports/employee/${employeeId}?period=${period}&from=${from}&to=${to}`);
+        const json = await res.json();
+        if (!json.success) return;
+
+        renderEmployeeReportPreview(json.data);
+      } catch (err) {
+        console.error('Failed to load employee report:', err);
+      }
+    }
+
+    function renderEmployeeReportPreview(report) {
+      const container = document.getElementById('reportPreviewContainer');
+      const emp = report.employee;
+      const stats = report.attendanceStats;
+      const leaves = report.leaveStats;
+      const loans = report.loanStats;
+
+      container.innerHTML = `
+        <!-- Branded Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-[#142B49] text-white flex items-center justify-center font-black text-xl shadow-md">
+              ${emp.fullName.split(' ').map(n=>n[0]).join('')}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-black text-slate-800">${emp.fullName}</h3>
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-teal-50 text-[#0F9D91] border border-teal-200">${emp.employeeCode}</span>
+              </div>
+              <p class="text-xs text-slate-500">${emp.jobTitle} &bull; ${emp.department} &bull; ${emp.branchName || 'Headquarters'}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-bold uppercase text-slate-400 block">Report Window</span>
+            <span class="text-sm font-bold text-slate-800 mono-num">${report.fromDate} &rarr; ${report.toDate}</span>
+          </div>
+        </div>
+
+        <!-- 4 Attendance Metric Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span class="text-[11px] font-bold text-slate-500 uppercase">Working Days</span>
+            <div class="text-xl font-black text-slate-800 mono-num mt-1">${stats.totalWorkingDays}</div>
+          </div>
+          <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200">
+            <span class="text-[11px] font-bold text-emerald-800 uppercase">Present Days</span>
+            <div class="text-xl font-black text-emerald-700 mono-num mt-1">${stats.totalPresentDays} <span class="text-xs font-semibold">(${stats.presentRate}%)</span></div>
+          </div>
+          <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200">
+            <span class="text-[11px] font-bold text-amber-800 uppercase">Late Arrivals</span>
+            <div class="text-xl font-black text-amber-700 mono-num mt-1">${stats.totalLateArrivals}</div>
+          </div>
+          <div class="p-3.5 bg-rose-50 rounded-xl border border-rose-200">
+            <span class="text-[11px] font-bold text-rose-800 uppercase">Absent Days</span>
+            <div class="text-xl font-black text-rose-700 mono-num mt-1">${stats.totalAbsentDays}</div>
+          </div>
+        </div>
+
+        <!-- Leave Consumption & Loan History Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <h5 class="text-xs font-bold uppercase text-slate-700">Leave Balance Consumption</h5>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white p-2 rounded-lg border">
+                <span class="text-[10px] text-slate-400 block font-semibold">Annual</span>
+                <span class="font-bold text-slate-800">${leaves.balances?.annualUsed || 0} / ${leaves.balances?.annualTotal || 14}</span>
+              </div>
+              <div class="bg-white p-2 rounded-lg border">
+                <span class="text-[10px] text-slate-400 block font-semibold">Sick</span>
+                <span class="font-bold text-slate-800">${leaves.balances?.sickUsed || 0} / ${leaves.balances?.sickTotal || 10}</span>
+              </div>
+              <div class="bg-white p-2 rounded-lg border">
+                <span class="text-[10px] text-slate-400 block font-semibold">Casual</span>
+                <span class="font-bold text-slate-800">${leaves.balances?.casualUsed || 0} / ${leaves.balances?.casualTotal || 10}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <h5 class="text-xs font-bold uppercase text-slate-700">Loan & Advance Status</h5>
+            <div class="text-xs space-y-1">
+              <div class="flex justify-between">
+                <span class="text-slate-500">Active Loans:</span>
+                <span class="font-bold text-slate-800">${loans.activeLoansCount}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Total Approved:</span>
+                <span class="font-bold text-slate-800">PKR ${(loans.totalApprovedAmount || 0).toLocaleString()}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Remaining Balance:</span>
+                <span class="font-bold text-amber-600">PKR ${(loans.outstandingBalance || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day-by-Day Daily Attendance Table -->
+        <div class="space-y-2">
+          <h5 class="text-xs font-bold uppercase text-slate-700">Daily Punctuality & Activity Audit Log</h5>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Day</th>
+                  <th class="py-2.5 px-3">Check-In</th>
+                  <th class="py-2.5 px-3">Check-Out</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Variance</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${report.dailyRecords && report.dailyRecords.length ? report.dailyRecords.map(r => `
+                  <tr class="hover:bg-slate-50">
+                    <td class="py-2 px-3 mono-num font-semibold text-slate-800">${r.date}</td>
+                    <td class="py-2 px-3 text-slate-500">${r.day}</td>
+                    <td class="py-2 px-3 mono-num font-bold ${r.checkIn ? 'text-slate-800' : 'text-slate-400'}">${r.checkIn || '—'}</td>
+                    <td class="py-2 px-3 mono-num text-slate-500">${r.checkOut || '—'}</td>
+                    <td class="py-2 px-3 font-semibold ${r.status === 'Present' ? 'text-emerald-700' : r.status === 'Late' ? 'text-amber-700' : r.status === 'Approved Leave' ? 'text-blue-700' : 'text-rose-700'}">${r.status}</td>
+                    <td class="py-2 px-3 text-right mono-num ${r.variance.includes('+') ? 'text-amber-600' : 'text-slate-500'}">${r.variance}</td>
+                  </tr>
+                `).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-400">No records found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function downloadEmployeeReportPdf() {
+      const employeeId = document.getElementById('reportEmployeeSelect').value;
+      const period = document.getElementById('reportPeriodSelect').value;
+      const from = document.getElementById('reportFromDate').value;
+      const to = document.getElementById('reportToDate').value;
+      if (!employeeId) return;
+
+      const url = `/api/v1/hrms/reports/employee/${employeeId}/pdf?period=${period}&from=${from}&to=${to}`;
+      window.open(url, '_blank');
+      showToast('Downloading employee report PDF...', 'info');
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 9: NOTIFICATIONS & ACTIVITY LOGS
+     * =========================================================================
+     */
+    async function loadNotificationsView() {
+      try {
+        const res = await fetch('/api/v1/hrms/notifications');
+        const json = await res.json();
+        if (!json.success) return;
+
+        const notifs = json.data.notifications || [];
+        document.getElementById('badgeUnreadNotifs').innerText = json.data.unreadCount || 0;
+        document.getElementById('headerNotifDot').style.display = json.data.unreadCount > 0 ? 'block' : 'none';
+
+        renderNotificationsList(notifs);
+
+        // Fetch recent activities for right column
+        const dashRes = await fetch(`/api/v1/hrms/dashboard?date=${globalSelectedDate}`);
+        const dashJson = await dashRes.json();
+        if (dashJson.success) {
+          renderActivityTimelineFull(dashJson.data.recentActivities || []);
+        }
+      } catch (err) {
+        console.error('Failed to load notifications:', err);
+      }
+    }
+
+    function renderNotificationsList(notifs) {
+      const container = document.getElementById('notificationsFullList');
+      container.innerHTML = '';
+      if (!notifs.length) {
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border">No notifications found.</div>';
+        return;
+      }
+
+      notifs.forEach(n => {
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border transition flex items-start gap-3.5 ${n.isRead ? 'bg-white border-slate-200' : 'bg-teal-50/50 border-teal-200'}`;
+        card.innerHTML = `
+          <div class="w-9 h-9 rounded-xl ${n.type.includes('LEAVE') ? 'bg-blue-100 text-blue-700' : n.type.includes('LOAN') ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'} flex items-center justify-center text-sm flex-shrink-0">
+            <i class="fa-solid ${n.type.includes('LEAVE') ? 'fa-plane' : n.type.includes('LOAN') ? 'fa-coins' : 'fa-clock'}"></i>
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 text-xs">${n.title}</span>
+              <span class="text-[10px] text-slate-400 mono-num">${new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-0.5">${n.message}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderActivityTimelineFull(activities) {
+      const container = document.getElementById('activityTimelineFull');
+      container.innerHTML = '';
+      activities.forEach(act => {
+        const div = document.createElement('div');
+        div.className = 'relative pl-5 border-l-2 border-slate-200 space-y-0.5 text-xs';
+        div.innerHTML = `
+          <div class="absolute -left-1.5 top-0.5 w-2.5 h-2.5 rounded-full bg-[#0F9D91]"></div>
+          <div class="font-bold text-slate-800">${act.title}</div>
+          <div class="text-[11px] text-slate-500">${act.description}</div>
+          <div class="text-[10px] text-slate-400">${new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function markAllNotificationsRead() {
+      try {
+        const res = await fetch('/api/v1/hrms/notifications/read', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+        const json = await res.json();
+        if (json.success) {
+          showToast('All notifications marked as read', 'info');
+          loadNotificationsView();
+        }
+      } catch (err) {
+        showToast('Error marking notifications read', 'error');
+      }
+    }
+
+
+    /**
+     * =========================================================================
+     * MODULE 10: GEOFENCE & SECURITY SETTINGS
+     * =========================================================================
+     */
+    function initSecurityMap() {
+      if (geofenceLeafletInstance) {
+        setTimeout(() => geofenceLeafletInstance.invalidateSize(), 150);
+        return;
+      }
+
+      geofenceLeafletInstance = L.map('geofenceMap').setView([currentSecurityOffice.lat, currentSecurityOffice.lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(geofenceLeafletInstance);
+
+      const icon = L.divIcon({
+        className: 'custom-pin',
+        html: `<div style="background-color: #0F9D91; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.4);"><i class="fa-solid fa-building text-white text-xs"></i></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      officeMarker = L.marker([currentSecurityOffice.lat, currentSecurityOffice.lng], { icon })
+        .addTo(geofenceLeafletInstance)
+        .bindPopup(`<b>${currentSecurityOffice.name}</b><br>Authorized Perimeter: ${currentSecurityOffice.radius}m`);
+
+      geofenceCircle = L.circle([currentSecurityOffice.lat, currentSecurityOffice.lng], {
+        color: '#0F9D91',
+        fillColor: '#0F9D91',
+        fillOpacity: 0.22,
+        radius: currentSecurityOffice.radius
+      }).addTo(geofenceLeafletInstance);
+
+      // Slider listener
+      document.getElementById('radiusSlider').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        currentSecurityOffice.radius = val;
+        document.getElementById('radiusLabel').innerText = `${val} m`;
+        if (geofenceCircle) geofenceCircle.setRadius(val);
+      });
+    }
+
+    function onSecurityOfficeChange(officeId) {
+      if (officeId === 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e') {
+        currentSecurityOffice = {
+          id: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+          name: 'Headquarters - Tech Campus (Lahore)',
+          lat: 31.5204,
+          lng: 74.3587,
+          radius: 100
+        };
+      } else {
+        currentSecurityOffice = {
+          id: 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f',
+          name: 'Downtown Hub - Regional Office (Karachi)',
+          lat: 24.8607,
+          lng: 67.0011,
+          radius: 80
+        };
+      }
+      if (geofenceLeafletInstance) {
+        geofenceLeafletInstance.setView([currentSecurityOffice.lat, currentSecurityOffice.lng], 16);
+        officeMarker.setLatLng([currentSecurityOffice.lat, currentSecurityOffice.lng]);
+        geofenceCircle.setLatLng([currentSecurityOffice.lat, currentSecurityOffice.lng]);
+        geofenceCircle.setRadius(currentSecurityOffice.radius);
+      }
+    }
+
+    async function simulatePunchSecurity(mode) {
+      const toast = document.getElementById('securitySimToast');
+      toast.className = 'text-xs p-2.5 rounded-xl border mt-2';
+      toast.classList.remove('hidden');
+
+      let payload = {
+        officeId: currentSecurityOffice.id,
+        latitude: currentSecurityOffice.lat,
+        longitude: currentSecurityOffice.lng,
+        accuracyMeters: 8,
+        isMockProvider: false,
+        deviceFingerprint: {
+          deviceId: 'SEC-DEMO-TESTER',
+          isRooted: false,
+          clientTimestamp: new Date().toISOString(),
+        }
+      };
+
+      if (mode === 'INSIDE') {
+        // Safe 50m offset
+        payload.latitude += 0.0003;
+      } else if (mode === 'OUTSIDE') {
+        // 350m offset (out of bounds)
+        payload.latitude += 0.0035;
+      } else if (mode === 'MOCK_GPS') {
+        payload.isMockProvider = true;
+      }
+
+      try {
+        const token = 'mock-bearer-token';
+        const res = await fetch('/api/v1/attendance/punch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          toast.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+          toast.innerHTML = `<strong>Authorized:</strong> Punch recorded within ${data.data?.geofenceEvaluation?.distanceMeters}m perimeter.`;
+        } else {
+          toast.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200');
+          toast.innerHTML = `<strong>Rejected [${data.error?.code}]:</strong> ${data.error?.message}`;
+        }
+      } catch (err) {
+        toast.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200');
+        toast.innerText = 'Simulator error: ' + err.message;
+      }
+    }
+  </script>
+
+</body>
+</html>

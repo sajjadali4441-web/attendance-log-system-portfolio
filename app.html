@@ -1,0 +1,3854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALS Mobile Simulator | Location-Based Attendance Log System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .lcd-font {
+      font-family: 'Chakra Petch', monospace;
+    }
+
+    /* Dynamic CSS Theme Variables */
+    :root {
+      --theme-primary: #088395;
+      --theme-secondary: #0b8b98;
+      --theme-border: #99d5e3;
+      --theme-card-from: #d2eef5;
+      --theme-card-to: #ebf7fa;
+      --theme-viewport-bg: #e6f4f8;
+      --theme-checkin-bg: #c7edf5;
+      --theme-checkin-hover: #b0e4ee;
+      --theme-checkin-text: #0f766e;
+      --theme-active-nav: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Apply dynamic theme classes */
+    .bg-theme-primary { background-color: var(--theme-primary) !important; }
+    .bg-theme-secondary { background-color: var(--theme-secondary) !important; }
+    .text-theme-primary { color: var(--theme-primary) !important; }
+    .text-theme-secondary { color: var(--theme-secondary) !important; }
+    .border-theme-primary { border-color: var(--theme-primary) !important; }
+    .border-theme-border { border-color: var(--theme-border) !important; }
+
+    .nav-tab.active-tab {
+      background-color: var(--theme-active-nav);
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.18);
+      border-radius: 0.75rem;
+      transform: scale(1.04);
+    }
+
+    /* Smartphone Frame Styling */
+    .phone-bezel {
+      width: 390px;
+      height: 820px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 12px #1e293b, 0 0 0 14px #334155;
+      border-radius: 46px;
+    }
+
+    /* Scrollbar hide */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Popup slide up animation */
+    @keyframes slideUpMenu {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .animate-menu {
+      animation: slideUpMenu 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="flex flex-col lg:flex-row items-center gap-8 max-w-6xl w-full justify-center">
+
+    <!-- Left Controls Panel: Testing & Simulation Tools for Recruiters / QA -->
+    <div class="w-full lg:w-80 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-4">
+      <!-- Navigation link to Admin Portal -->
+      <a href="/admin" class="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 text-xs font-bold transition shadow-xs active:scale-95">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Return to Admin Portal</span>
+      </a>
+
+      <div class="flex items-center gap-2 text-cyan-400">
+        <i class="fa-solid fa-sliders text-base"></i>
+        <h2 class="text-sm font-bold uppercase tracking-wider text-white">Interactive Test Console</h2>
+      </div>
+      <p class="text-xs text-slate-400">
+        Test all interactive menus, theme color switcher, and offline geofence features:
+      </p>
+
+      <!-- App Screen View Switcher for Testing (Home vs My Attendance Summary vs Records) -->
+      <div class="space-y-1.5 pt-1">
+        <label class="text-xs font-semibold text-slate-300">Screen View Switcher:</label>
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button id="btnConsoleHome" onclick="navigateToScreen('home')" class="p-2 rounded-xl bg-cyan-900/50 hover:bg-cyan-900/70 text-cyan-200 border border-cyan-600/60 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="Home Screen">
+            <i class="fa-solid fa-house text-xs text-cyan-400"></i> Home
+          </button>
+          <button id="btnConsoleSummary" onclick="navigateToScreen('attendance-summary')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="My Attendance Summary">
+            <i class="fa-solid fa-chart-pie text-xs text-teal-400"></i> Summary
+          </button>
+          <button id="btnConsoleRecords" onclick="navigateToScreen('attendance-records')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="My Attendance Records">
+            <i class="fa-solid fa-table-list text-xs text-teal-400"></i> Records
+          </button>
+          <button id="btnConsoleRoster" onclick="navigateToScreen('my-roster')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="My Roster">
+            <i class="fa-regular fa-clipboard text-xs text-teal-400"></i> Roster
+          </button>
+          <button id="btnConsoleLocShift" onclick="navigateToScreen('location-shift-summary')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="Location/Department/Shift Summary">
+            <i class="fa-solid fa-sitemap text-xs text-teal-400"></i> Loc/Shift
+          </button>
+          <button id="btnConsoleEmpSummary" onclick="navigateToScreen('employees-attendance-summary')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="Employees Attendance Summary">
+            <i class="fa-solid fa-users text-xs text-teal-400"></i> Emp Sum
+          </button>
+          <button id="btnConsoleEmpRecords" onclick="navigateToScreen('employees-attendance-records')" class="col-span-3 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold" title="Employees Attendance Records">
+            <i class="fa-solid fa-user-check text-xs text-teal-400"></i> Employees Attendance Records
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Menu Trigger Buttons for QA -->
+      <div class="space-y-1.5 pt-1">
+        <label class="text-xs font-semibold text-slate-300">Quick Test Popup Menus:</label>
+        <div class="grid grid-cols-2 gap-1.5 text-xs">
+          <button onclick="toggleBottomMenu('leave')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-left flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-regular fa-calendar-days text-xs text-cyan-400"></i> Leave Menu
+          </button>
+          <button onclick="toggleBottomMenu('payroll')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-left flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-money-bill-1-wave text-xs text-cyan-400"></i> Payroll Menu
+          </button>
+          <button onclick="toggleBottomMenu('attendance')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-left flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-regular fa-clock text-xs text-cyan-400"></i> Attendance Menu
+          </button>
+          <button onclick="toggleBottomMenu('smartess')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-left flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-shield-halved text-xs text-cyan-400"></i> ALS Menu
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Test Check-In / Check-Out Actions -->
+      <div class="space-y-1.5 pt-1">
+        <label class="text-xs font-semibold text-slate-300">Quick Test Punch Actions:</label>
+        <div class="grid grid-cols-2 gap-1.5 text-xs">
+          <button onclick="mobileCheckIn('CHECK_IN')" class="p-2 rounded-xl bg-teal-900/40 hover:bg-teal-900/60 text-teal-300 border border-teal-700/60 text-center flex items-center justify-center gap-1.5 active:scale-95 transition font-semibold">
+            <i class="fa-solid fa-arrow-down-to-bracket text-xs text-teal-400"></i> Punch In
+          </button>
+          <button onclick="mobileCheckIn('CHECK_OUT')" class="p-2 rounded-xl bg-rose-900/40 hover:bg-rose-900/60 text-rose-300 border border-rose-700/60 text-center flex items-center justify-center gap-1.5 active:scale-95 transition font-semibold">
+            <i class="fa-solid fa-arrow-up-from-bracket text-xs text-rose-400"></i> Punch Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Theme Switcher Trigger Button -->
+      <div class="pt-1">
+        <button onclick="toggleThemePicker(true)" class="w-full py-2 px-3 bg-gradient-to-r from-teal-600/30 to-cyan-600/30 hover:from-teal-600/40 hover:to-cyan-600/40 border border-teal-500/40 text-teal-300 rounded-xl text-xs font-semibold flex items-center justify-between transition">
+          <span class="flex items-center gap-2">
+            <i class="fa-solid fa-palette text-cyan-400"></i> Theme & Color Wheel
+          </span>
+          <span id="activeThemePill" class="px-2 py-0.5 rounded-full bg-teal-500/30 text-[10px] font-bold">Teal (Default)</span>
+        </button>
+      </div>
+
+      <!-- GPS Coordinate Mode -->
+      <div class="space-y-1.5 pt-1">
+        <label class="text-xs font-semibold text-slate-300">Simulate Mobile Position:</label>
+        <select id="gpsPreset" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+          <option value="INSIDE">📍 Inside Office HQ (14m from center)</option>
+          <option value="OUTSIDE">🚫 Outside Office Zone (940m away)</option>
+          <option value="MOCK">🛡️ Fake GPS App Active (Mock Provider)</option>
+          <option value="UNREGISTERED">📱 Unregistered Device ID (Buddy Punch)</option>
+        </select>
+      </div>
+
+      <!-- Network Offline / Airplane Mode Switch -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-plane text-amber-400"></i> Airplane / Offline Mode
+          </div>
+          <div class="text-[10px] text-slate-400">Tests offline queue & auto-sync</div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="offlineToggle" class="sr-only peer">
+          <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+        </label>
+      </div>
+
+      <!-- Quick Switch to Admin Portal -->
+      <div class="pt-2 border-t border-slate-800 space-y-2">
+        <a href="/admin" target="_blank" class="w-full py-2.5 px-3 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-map"></i> Open Web Admin Geofence Map
+        </a>
+      </div>
+
+      <!-- Status Toast in Console -->
+      <div id="consoleStatus" class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400 font-mono">
+        Status: ALS (Attendance Log System) connected to GeoAttend API.<br>
+        All popup menus and theme engine ready.
+      </div>
+    </div>
+
+    <!-- Center: Pixel-Perfect Mobile Phone Bezel -->
+    <div class="phone-bezel relative overflow-hidden flex flex-col border border-slate-700 select-none">
+
+      <!-- Speaker Notch & Camera Hole -->
+      <div class="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-4 bg-slate-900 rounded-full z-50 flex items-center justify-center">
+        <div class="w-3 h-3 rounded-full bg-slate-800 border border-slate-700 mr-2"></div>
+        <div class="w-10 h-1.5 bg-slate-800 rounded-full"></div>
+      </div>
+
+      <!-- Mobile App Viewport (Inside the Phone) -->
+      <div id="mobileAppViewport" class="w-full h-full flex flex-col bg-[#e6f4f8] text-slate-800 relative overflow-hidden transition-colors duration-300">
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 1: HOME SCREEN VIEW (Pic1.jpeg) -->
+        <!-- ==================================================================== -->
+        <div id="homeScreenView" class="w-full h-full flex flex-col relative overflow-hidden">
+
+          <!-- Top Android App Header (Pic1.jpeg & Bug Report) -->
+          <div class="bg-white px-4 pt-8 pb-3 flex items-center justify-between border-b border-cyan-100 shadow-sm z-30">
+            <button onclick="toggleDrawer(true)" class="text-theme-primary hover:opacity-80 text-lg p-1 transition">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-bold text-theme-primary">Home</h1>
+            <div class="flex items-center gap-4 text-theme-primary">
+              <!-- Palette Icon for Theme Change (Fixed) -->
+              <button onclick="toggleThemePicker(true)" class="hover:opacity-80 p-1 transition" title="Change Theme Color">
+                <i class="fa-solid fa-palette text-base"></i>
+              </button>
+              <button onclick="toggleLockModal(true)" class="hover:opacity-80 p-1 transition" title="Session Lock">
+                <i class="fa-solid fa-lock text-base"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Offline Resilience Banner (pic2.jpeg: "You are offline.. but still can mark Attendance") -->
+          <div id="mobileOfflineBanner" class="hidden bg-slate-800 text-amber-300 px-3 py-2 text-xs flex items-center justify-between shadow-md z-20">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+              <span>You are offline.. but still can mark Attendance</span>
+            </div>
+            <button onclick="syncOfflineQueue()" class="text-cyan-400 hover:text-cyan-300">
+              <i class="fa-solid fa-rotate text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Scrollable Main Screen Content -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
+
+            <!-- 1. Profile Identity Header Card (Pic1.jpeg) -->
+            <div id="profileCardHeader" class="m-3 p-4 bg-gradient-to-r from-[#d2eef5] to-[#ebf7fa] rounded-2xl border border-theme-border shadow-sm relative overflow-hidden transition-colors duration-300">
+              <div class="flex gap-4">
+                <!-- Avatar Frame -->
+                <div class="w-20 h-24 rounded-2xl border-4 border-teal-500/80 bg-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
+                  <i class="fa-solid fa-user text-4xl text-slate-500"></i>
+                </div>
+
+                <!-- Name & Designation & User ID (Task 1) -->
+                <div class="flex-1 space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-id-badge text-theme-primary text-xs"></i>
+                    <span class="font-bold text-base text-slate-800" id="profileNameDisplay">Sajjad Ali</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shield text-theme-secondary text-xs"></i>
+                    <span class="text-xs text-slate-700 font-medium" id="profileTitleDisplay">Senior Product Designer</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-theme-primary text-xs"></i>
+                    <span class="text-xs text-slate-600 font-semibold" id="profileIdDisplay">ID: AK-8924</span>
+                  </div>
+
+                  <!-- View Profile Button -->
+                  <button onclick="toggleProfileModal(true)" class="mt-1 px-4 py-1.5 bg-white/90 hover:bg-white text-slate-700 text-xs font-semibold rounded-lg shadow-sm border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
+                    <i class="fa-solid fa-user text-theme-primary text-xs"></i> View Profile
+                  </button>
+                </div>
+              </div>
+
+              <!-- Voice Recognition Feature Toggle (Pic1.jpeg) -->
+              <div class="mt-3 pt-2.5 border-t border-teal-200/60 flex items-center justify-between text-xs text-slate-700 font-semibold">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-microphone-lines text-theme-primary text-sm"></i>
+                  <span>Voice Recognition</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="voiceToggle" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Action Buttons Row (Pic1.jpeg) -->
+            <div class="grid grid-cols-3 gap-1.5 px-3">
+              <!-- Pending Attendance -->
+              <button onclick="syncOfflineQueue()" class="bg-[#8b99a4] text-white p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-sm active:scale-95 transition relative">
+                <span class="text-[11px] font-semibold leading-tight">Pending<br>Attendance</span>
+                <i class="fa-solid fa-rotate text-sm mt-1.5"></i>
+                <span id="pendingBadge" class="hidden absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+              </button>
+
+              <!-- Attendance Rejection Log (Badge 4) -->
+              <button onclick="toggleRejectionModal(true)" class="bg-theme-secondary text-white p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-sm active:scale-95 transition relative">
+                <span class="text-[11px] font-semibold leading-tight">Attendance<br>Rejection Log</span>
+                <i class="fa-solid fa-triangle-exclamation text-sm mt-1.5"></i>
+                <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center" id="rejectionBadge">4</span>
+              </button>
+
+              <!-- View Allowed Locations -->
+              <button onclick="toggleLocationsModal(true)" class="bg-theme-secondary text-white p-2.5 rounded-xl flex flex-col items-center justify-center text-center shadow-sm active:scale-95 transition">
+                <span class="text-[11px] font-semibold leading-tight">View Allowed<br>Locations</span>
+                <i class="fa-solid fa-location-dot text-sm mt-1.5"></i>
+              </button>
+            </div>
+
+            <!-- 3. Date Range Filter & Metric Counters (Pic1.jpeg) -->
+            <div class="m-3 p-3 bg-white rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+              <div class="flex items-center justify-between text-xs text-theme-primary font-semibold">
+                <div class="flex items-center gap-1.5">
+                  <span>From</span>
+                  <i class="fa-regular fa-calendar"></i>
+                  <span class="lcd-font text-slate-800 font-bold">06-11-2026</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span>To</span>
+                  <i class="fa-regular fa-calendar"></i>
+                  <span class="lcd-font text-slate-800 font-bold">06-11-2026</span>
+                  <button onclick="refreshMobileData()" class="text-theme-secondary hover:opacity-80 ml-1">
+                    <i class="fa-solid fa-rotate"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 6 Status LCD Counters -->
+              <div class="grid grid-cols-6 gap-1 text-center">
+                <!-- Present -->
+                <div class="border border-emerald-500 rounded-xl p-1 bg-emerald-50/40">
+                  <div class="lcd-font text-base font-bold text-emerald-600" id="cardPresent">01</div>
+                  <div class="text-[9px] font-bold text-emerald-700">Present</div>
+                </div>
+                <!-- Off Day -->
+                <div class="border border-slate-300 rounded-xl p-1 bg-slate-50">
+                  <div class="lcd-font text-base font-bold text-slate-400">00</div>
+                  <div class="text-[9px] font-bold text-slate-500">Off Day</div>
+                </div>
+                <!-- LOP -->
+                <div class="border border-teal-500 rounded-xl p-1 bg-teal-50/40">
+                  <div class="lcd-font text-base font-bold text-teal-600">00</div>
+                  <div class="text-[9px] font-bold text-teal-700">LOP</div>
+                </div>
+                <!-- Leave -->
+                <div class="border border-blue-500 rounded-xl p-1 bg-blue-50/40">
+                  <div class="lcd-font text-base font-bold text-blue-600">00</div>
+                  <div class="text-[9px] font-bold text-blue-700">Leave</div>
+                </div>
+                <!-- Deputation -->
+                <div class="border border-slate-300 rounded-xl p-1 bg-slate-50">
+                  <div class="lcd-font text-base font-bold text-slate-400">00</div>
+                  <div class="text-[9px] font-bold text-slate-500">Deputa...</div>
+                </div>
+                <!-- Absent -->
+                <div class="border border-rose-500 rounded-xl p-1 bg-rose-50/40">
+                  <div class="lcd-font text-base font-bold text-rose-500" id="cardAbsent">00</div>
+                  <div class="text-[9px] font-bold text-rose-600">Absent</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Tactile Circular Check-In / Check-Out Interface (Pic1.jpeg - Fixed Side-by-Side Spacing & Timestamps) -->
+            <div class="mx-3 mt-4 p-5 bg-white/70 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm">
+              <h3 class="text-xs font-bold text-slate-600 mb-5">My Check In/Check Out</h3>
+
+              <!-- Non-overlapping, Distinct Side-by-Side Flex Layout -->
+              <div class="flex items-start justify-center gap-6 sm:gap-8 my-2">
+                
+                <!-- Check-In Column (Blue / Cyan Circle) -->
+                <div class="flex flex-col items-center flex-1 max-w-[136px]">
+                  <button onclick="mobileCheckIn('CHECK_IN')" class="w-32 h-32 sm:w-34 sm:h-34 rounded-full bg-[#c7edf5] hover:bg-[#b0e4ee] border-4 border-white shadow-lg flex flex-col items-center justify-center transition active:scale-95 group focus:outline-none focus:ring-2 focus:ring-teal-400">
+                    <span class="text-sm font-bold text-teal-800">Check-In</span>
+                    <i class="fa-solid fa-chevron-down text-teal-600 mt-1.5 text-xs group-hover:translate-y-0.5 transition"></i>
+                  </button>
+                  
+                  <!-- Check-In Timestamp rendered directly below Check-In circle -->
+                  <div class="mt-2.5 min-h-[26px] flex items-center justify-center">
+                    <span id="lastCheckInDisplay" class="text-xs font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200 shadow-sm transition">
+                      09:54 AM
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Check-Out Column (Red / Peach Circle) -->
+                <div class="flex flex-col items-center flex-1 max-w-[136px]">
+                  <button onclick="mobileCheckIn('CHECK_OUT')" class="w-32 h-32 sm:w-34 sm:h-34 rounded-full bg-[#fddddb] hover:bg-[#fad0cd] border-4 border-white shadow-lg flex flex-col items-center justify-center transition active:scale-95 group focus:outline-none focus:ring-2 focus:ring-rose-400">
+                    <i class="fa-solid fa-chevron-up text-rose-500 mb-1.5 text-xs group-hover:-translate-y-0.5 transition"></i>
+                    <span class="text-sm font-bold text-rose-700">Check-Out</span>
+                  </button>
+                  
+                  <!-- Check-Out Timestamp rendered directly below Check-Out circle (Conditionally Rendered) -->
+                  <div class="mt-2.5 min-h-[26px] flex items-center justify-center">
+                    <span id="lastCheckOutDisplay" class="hidden text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200 shadow-sm transition">
+                      --:--
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 2: MY ATTENDANCE SUMMARY SCREEN VIEW (Matching Reference Screen) -->
+        <!-- ==================================================================== -->
+        <div id="attendanceSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar with Back Navigation Arrow (Matching Reference Screen) -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back to Home">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-sm sm:text-base font-bold text-white tracking-wider uppercase ml-1 flex-1">
+              MY ATTENDANCE SUMMARY
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Subtle organic background curves matching ALS theme -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content Area -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-3 space-y-3 z-10">
+
+            <!-- 1. Filter Card: Date Range Pickers & Include Absents Checkbox -->
+            <div class="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-sm space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                
+                <!-- From Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">From Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftSummaryDate('from', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="summaryFromDateText" onclick="triggerNativeDatePicker('from')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none" title="Click to choose date">
+                      26-10-2026
+                    </span>
+                    <button onclick="shiftSummaryDate('from', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeFromDate" class="sr-only" onchange="onNativeDateSelected('from', this.value)">
+                </div>
+
+                <!-- To Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">To Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftSummaryDate('to', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="summaryToDateText" onclick="triggerNativeDatePicker('to')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none" title="Click to choose date">
+                      10-11-2026
+                    </span>
+                    <button onclick="shiftSummaryDate('to', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeToDate" class="sr-only" onchange="onNativeDateSelected('to', this.value)">
+                </div>
+
+              </div>
+
+              <!-- Include Absents Checkbox -->
+              <div class="flex items-center gap-2 pt-0.5">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkIncludeAbsents" checked onchange="onToggleIncludeAbsents(this.checked)" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Include Absents</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Centered Section Title: SUMMARY -->
+            <div class="text-center pt-1 pb-0.5">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-600">SUMMARY</span>
+            </div>
+
+            <!-- 3. Summary List Cards (Absent, Leave, Off Day, Present) -->
+            <div class="space-y-2">
+              <!-- Absent Card -->
+              <div id="summaryCardAbsent" class="bg-[#d2eff5] border border-[#b4e2eb] rounded-xl px-4 py-3 flex items-center justify-between shadow-sm transition-all duration-200">
+                <span class="text-sm font-semibold text-slate-800">Absent</span>
+                <span id="badgeAbsent" class="w-7 h-7 rounded-full bg-[#189baa] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  3
+                </span>
+              </div>
+
+              <!-- Leave Card -->
+              <div id="summaryCardLeave" class="bg-[#d2eff5] border border-[#b4e2eb] rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                <span class="text-sm font-semibold text-slate-800">Leave</span>
+                <span id="badgeLeave" class="w-7 h-7 rounded-full bg-[#189baa] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  1
+                </span>
+              </div>
+
+              <!-- Off Day Card -->
+              <div id="summaryCardOffDay" class="bg-[#d2eff5] border border-[#b4e2eb] rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                <span class="text-sm font-semibold text-slate-800">Off Day</span>
+                <span id="badgeOffDay" class="w-7 h-7 rounded-full bg-[#189baa] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  4
+                </span>
+              </div>
+
+              <!-- Present Card -->
+              <div id="summaryCardPresent" class="bg-[#d2eff5] border border-[#b4e2eb] rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                <span class="text-sm font-semibold text-slate-800">Present</span>
+                <span id="badgePresent" class="w-7 h-7 rounded-full bg-[#189baa] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  8
+                </span>
+              </div>
+            </div>
+
+            <!-- 4. Donut Chart Visualization Card -->
+            <div class="bg-white/85 backdrop-blur rounded-2xl p-3 border border-slate-200/90 shadow-sm flex flex-col items-center">
+              
+              <!-- SVG Donut Chart Canvas with Callout Labels -->
+              <div class="w-full flex items-center justify-center">
+                <svg id="attendanceDonutChart" viewBox="0 0 320 240" class="w-full max-w-[310px] h-[220px]">
+                  <!-- Dynamically drawn segments and callout lines -->
+                </svg>
+              </div>
+
+              <!-- Color-Coded Legend at Bottom -->
+              <div class="w-full mt-2 bg-[#eaf3f6] border border-slate-200/80 rounded-xl py-2 px-1 grid grid-cols-4 text-center items-center text-[10px] font-semibold text-slate-700">
+                <!-- Absent Legend (Orange) -->
+                <div class="flex items-center justify-center gap-1">
+                  <span class="w-3.5 h-3.5 rounded-full border-[3.5px] border-[#ea6c00] bg-transparent"></span>
+                  <span>Absent</span>
+                </div>
+                <!-- Leave Legend (Purple) -->
+                <div class="flex items-center justify-center gap-1">
+                  <span class="w-3.5 h-3.5 rounded-full border-[3.5px] border-[#9d6c8b] bg-transparent"></span>
+                  <span>Leave</span>
+                </div>
+                <!-- Off Day Legend (Navy Blue) -->
+                <div class="flex items-center justify-center gap-1">
+                  <span class="w-3.5 h-3.5 rounded-full border-[3.5px] border-[#0d3159] bg-transparent"></span>
+                  <span>Off Day</span>
+                </div>
+                <!-- Present Legend (Dark Green) -->
+                <div class="flex items-center justify-center gap-1">
+                  <span class="w-3.5 h-3.5 rounded-full border-[3.5px] border-[#0a4a27] bg-transparent"></span>
+                  <span>Present</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 3: MY ATTENDANCE RECORDS SCREEN VIEW (Matching Reference Screen) -->
+        <!-- ==================================================================== -->
+        <div id="attendanceRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar with Back Navigation Arrow -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back to Home">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-sm sm:text-base font-bold text-white tracking-wider uppercase ml-1 flex-1">
+              MY ATTENDANCE RECORDS
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Subtle organic background curves matching ALS theme -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content Area -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-2.5 sm:p-3 space-y-2.5 z-10">
+
+            <!-- 1. Filter Card: Date Range Pickers & Two Checkboxes (Only Missings & Include Absents) -->
+            <div class="bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200 shadow-sm space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                
+                <!-- From Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">From Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftRecordsDate('from', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="recordsFromDateText" onclick="triggerNativeRecordsDatePicker('from')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none" title="Click to choose date">
+                      26-10-2026
+                    </span>
+                    <button onclick="shiftRecordsDate('from', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeRecordsFromDate" class="sr-only" onchange="onNativeRecordsDateSelected('from', this.value)">
+                </div>
+
+                <!-- To Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">To Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftRecordsDate('to', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="recordsToDateText" onclick="triggerNativeRecordsDatePicker('to')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none" title="Click to choose date">
+                      10-11-2026
+                    </span>
+                    <button onclick="shiftRecordsDate('to', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeRecordsToDate" class="sr-only" onchange="onNativeRecordsDateSelected('to', this.value)">
+                </div>
+
+              </div>
+
+              <!-- Two Checkboxes: Only Missings and Include Absents (Matching Reference Screen) -->
+              <div class="flex items-center justify-between px-1 pt-0.5">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkOnlyMissings" onchange="onToggleRecordsFilters()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Only Missings</span>
+                </label>
+
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkRecordsIncludeAbsents" checked onchange="onToggleRecordsFilters()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Include Absents</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Hours Summary Card (Required Hours, Present Hours, Hours Difference) -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div class="grid grid-cols-3 divide-x divide-slate-200 text-center">
+                <!-- Column 1: Required Hours -->
+                <div class="py-2.5 px-1 bg-slate-50/40">
+                  <div class="text-[11px] font-medium text-slate-600 leading-tight">Required Hours</div>
+                  <div id="lblRequiredHours" class="text-xs sm:text-sm font-bold text-slate-800 mt-1">108.00</div>
+                </div>
+
+                <!-- Column 2: Present Hours -->
+                <div class="py-2.5 px-1 bg-slate-50/40">
+                  <div class="text-[11px] font-medium text-slate-600 leading-tight">Present Hours</div>
+                  <div id="lblPresentHours" class="text-xs sm:text-sm font-bold text-slate-800 mt-1">29.94</div>
+                </div>
+
+                <!-- Column 3: Hours Difference -->
+                <div class="py-2.5 px-1 bg-slate-50/40">
+                  <div class="text-[11px] font-medium text-slate-600 leading-tight">Hours Difference</div>
+                  <div id="lblHoursDifference" class="text-xs sm:text-sm font-bold text-[#dc2626] mt-1">-78.06</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Detailed Data Table Container (Date, In, Out, Missing, Status, Present Hours) -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div class="overflow-x-auto w-full">
+                <table class="w-full border-collapse text-left text-xs" id="attendanceRecordsTable">
+                  <thead>
+                    <tr class="bg-slate-100 border-b border-slate-300 text-slate-700 font-semibold text-[11px]">
+                      <th class="py-2 px-2 text-center border-r border-slate-300 whitespace-nowrap min-w-[105px]">Date</th>
+                      <th class="py-2 px-1 text-center border-r border-slate-300 whitespace-nowrap min-w-[62px]">In</th>
+                      <th class="py-2 px-1 text-center border-r border-slate-300 whitespace-nowrap min-w-[62px]">Out</th>
+                      <th class="py-2 px-1 text-center border-r border-slate-300 whitespace-nowrap min-w-[52px]">Missing</th>
+                      <th class="py-2 px-1.5 text-center border-r border-slate-300 whitespace-nowrap min-w-[65px]">Status</th>
+                      <th class="py-2 px-1.5 text-center whitespace-nowrap min-w-[65px]">Present<br>Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendanceRecordsTableBody" class="divide-y divide-slate-200">
+                    <!-- Populated dynamically via renderAttendanceRecordsUI() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 4: MY ROSTER SCREEN VIEW (Matching Reference Screen 1) -->
+        <!-- ==================================================================== -->
+        <div id="myRosterScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-sm sm:text-base font-bold text-white tracking-wider ml-1 flex-1">
+              My Roster
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Background organic blobs -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-3 space-y-3 z-10">
+
+            <!-- Month Navigator Bar: < November 2026 > -->
+            <div class="flex items-center justify-between px-2 pt-1">
+              <button onclick="shiftRosterMonth(-1)" class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-200/60 rounded-full active:scale-90 transition font-bold">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+              </button>
+              <h2 id="rosterMonthHeading" class="text-sm sm:text-base font-bold text-slate-800 tracking-wide">
+                November 2026
+              </h2>
+              <button onclick="shiftRosterMonth(1)" class="w-7 h-7 flex items-center justify-center text-slate-700 hover:bg-slate-200/60 rounded-full active:scale-90 transition font-bold">
+                <i class="fa-solid fa-chevron-right text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Calendar Days Header (Sun Mon Tue Wed Thu Fri Sat) -->
+            <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500 py-1">
+              <div>Sun</div>
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+            </div>
+
+            <!-- Calendar Grid (Injected dynamically by renderRosterCalendar()) -->
+            <div id="rosterDaysGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Legend Card (OFF Days & General(09:00-18:00)) -->
+            <div class="bg-white/90 backdrop-blur rounded-2xl p-2.5 border border-slate-200 shadow-sm flex items-center gap-4 text-xs font-medium text-slate-700">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-[#80f0ff] border border-cyan-300"></span>
+                <span>OFF Days</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-[#b8acc4] border border-purple-300"></span>
+                <span>General(09:00-18:00)</span>
+              </div>
+            </div>
+
+            <!-- Selected Day Detail Card -->
+            <div id="rosterSelectedDetailCard" class="bg-[#d7f1f7] border border-[#aae1ec] rounded-2xl p-3 flex items-center gap-3 shadow-sm transition">
+              <div class="w-10 h-10 rounded-xl bg-[#b9e6f0] text-theme-primary flex items-center justify-center text-base shrink-0">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span id="lblRosterShiftTitle" class="text-xs sm:text-sm font-bold text-slate-800">General(09:00-18:00)</span>
+                  <span id="lblRosterShiftTiming" class="text-[10px] px-2 py-0.5 rounded-md bg-cyan-100/90 text-cyan-800 font-semibold">09:00 - 18:00</span>
+                </div>
+                <div id="lblRosterDateSubtitle" class="text-[11px] text-slate-500 font-medium mt-0.5">10-11-2026</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 5: LOCATION/DEPARTMENT/SHIFT WISE SUMMARY (Screenshot 2) -->
+        <!-- ==================================================================== -->
+        <div id="locationShiftScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-xs sm:text-sm font-bold text-white tracking-wider uppercase ml-1 flex-1 truncate" title="LOCATION/DEPARTMENT/SHIFT WISE ATTENDANCE SUMMARY">
+              LOCATION/DEPARTMENT/SHIFT WISE ATTE...
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Background blobs -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-3 space-y-3 z-10">
+
+            <!-- Filter Card -->
+            <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2.5">
+              
+              <!-- Date Range / Single Date Selector (< 10-11-2026 >) -->
+              <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                <div class="flex items-center justify-between">
+                  <button onclick="shiftLocShiftDate(-1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                  </button>
+                  <span id="lblLocShiftDate" onclick="triggerNativeLocShiftDatePicker()" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none">
+                    10-11-2026
+                  </span>
+                  <button onclick="shiftLocShiftDate(1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                  </button>
+                </div>
+                <input type="date" id="nativeLocShiftDate" class="sr-only" onchange="onNativeLocShiftDateSelected(this.value)">
+              </div>
+
+              <!-- Employee Status Dropdown -->
+              <div class="flex items-center justify-between pt-1">
+                <label class="text-xs font-semibold text-slate-700">Employee Status:</label>
+                <div class="relative">
+                  <select id="selLocShiftEmpStatus" onchange="fetchAndRenderLocShiftData()" class="text-xs font-semibold text-slate-800 bg-transparent border-b border-slate-300 focus:border-theme-primary focus:outline-none pr-5 py-1 cursor-pointer">
+                    <option value="Continue" selected>Continue</option>
+                    <option value="Resigned">Resigned</option>
+                    <option value="Terminated">Terminated</option>
+                    <option value="All">All</option>
+                  </select>
+                  <i class="fa-solid fa-caret-down text-slate-500 text-xs absolute right-0 top-2 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Include Absents Checkbox -->
+              <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkLocShiftIncludeAbsents" checked onchange="fetchAndRenderLocShiftData()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Include Absents</span>
+                </label>
+              </div>
+
+            </div>
+
+            <!-- Regional Office Card with Bar Chart (Screenshot 2) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              
+              <!-- Card Header: Teal Bar "Regional Office LHR" -->
+              <div class="bg-theme-primary text-white text-center py-2 px-3 font-semibold text-xs sm:text-sm tracking-wide">
+                Regional Office LHR
+              </div>
+
+              <!-- Card Body: Left department/shift info + Right bar chart -->
+              <div class="p-3 grid grid-cols-2 gap-2 items-center">
+                <!-- Left Info -->
+                <div class="space-y-1">
+                  <div class="text-xs sm:text-sm font-semibold text-slate-800">Technology</div>
+                  <div class="text-[11px] text-slate-500">General Shift</div>
+                </div>
+
+                <!-- Right Histogram / Bar Chart (Matching Screenshot 2) -->
+                <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                  <!-- Y Axis (1 at top, 0 at bottom) -->
+                  <div class="flex flex-col justify-between h-20 text-[10px] text-slate-400 font-mono text-right pr-1">
+                    <span>1</span>
+                    <span>0</span>
+                  </div>
+
+                  <!-- Chart Canvas / Graphic -->
+                  <div class="flex-1 flex flex-col items-center">
+                    <div class="w-full h-20 border-b border-l border-slate-300 relative flex items-end justify-center px-2 pb-0.5">
+                      <!-- Bar -->
+                      <div id="locShiftBar" class="w-full max-w-[90px] h-[85%] bg-[#66c2d1] rounded-t transition-all duration-300 hover:opacity-90" title="Present: 1"></div>
+                    </div>
+                    <!-- X Axis Label -->
+                    <span class="text-[11px] text-slate-600 font-medium mt-1">Present</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 6: EMPLOYEES ATTENDANCE SUMMARY (Screenshot 3) -->
+        <!-- ==================================================================== -->
+        <div id="employeesSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-xs sm:text-sm font-bold text-white tracking-wider uppercase ml-1 flex-1">
+              EMPLOYEES ATTENDANCE SUMMARY
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Background blobs -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-3 space-y-3 z-10">
+
+            <!-- Filter Card -->
+            <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2.5">
+              
+              <!-- Date Range: From Date & To Date -->
+              <div class="grid grid-cols-2 gap-2">
+                <!-- From Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">From Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftEmpSummaryDate('from', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="lblEmpSummaryFromDate" onclick="triggerNativeEmpSummaryDatePicker('from')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none">
+                      26-10-2026
+                    </span>
+                    <button onclick="shiftEmpSummaryDate('from', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeEmpSummaryFromDate" class="sr-only" onchange="onNativeEmpSummaryDateSelected('from', this.value)">
+                </div>
+
+                <!-- To Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">To Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftEmpSummaryDate('to', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="lblEmpSummaryToDate" onclick="triggerNativeEmpSummaryDatePicker('to')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none">
+                      10-11-2026
+                    </span>
+                    <button onclick="shiftEmpSummaryDate('to', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeEmpSummaryToDate" class="sr-only" onchange="onNativeEmpSummaryDateSelected('to', this.value)">
+                </div>
+              </div>
+
+              <!-- Employee Status Dropdown -->
+              <div class="flex items-center justify-between pt-1">
+                <label class="text-xs font-semibold text-slate-700">Employee Status:</label>
+                <div class="relative">
+                  <select id="selEmpSummaryStatus" onchange="fetchAndRenderEmpSummaryData()" class="text-xs font-semibold text-slate-800 bg-transparent border-b border-slate-300 focus:border-theme-primary focus:outline-none pr-5 py-1 cursor-pointer">
+                    <option value="Continue" selected>Continue</option>
+                    <option value="Resigned">Resigned</option>
+                    <option value="Terminated">Terminated</option>
+                    <option value="All">All</option>
+                  </select>
+                  <i class="fa-solid fa-caret-down text-slate-500 text-xs absolute right-0 top-2 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Include Absents Checkbox (unchecked in screenshot 3) -->
+              <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkEmpSummaryIncludeAbsents" onchange="fetchAndRenderEmpSummaryData()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Include Absents</span>
+                </label>
+              </div>
+
+            </div>
+
+            <!-- Data Table Card (Screenshot 3) -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <table class="w-full border-collapse text-left text-xs" id="empSummaryTable">
+                <thead>
+                  <tr class="bg-slate-200/80 border-b border-slate-300 text-slate-700 font-semibold text-[11px]">
+                    <th class="py-2 px-2 text-center border-r border-slate-300 w-12">S#</th>
+                    <th class="py-2 px-3 text-center border-r border-slate-300">Employee</th>
+                    <th class="py-2 px-2 text-center border-r border-slate-300 w-16">Count</th>
+                    <th class="py-2 px-2 text-center w-20">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="empSummaryTableBody" class="divide-y divide-slate-200">
+                  <!-- Populated dynamically: Row 1 normal, Row 2 red matching Screenshot 3 -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 7: EMPLOYEES ATTENDANCE RECORDS (Screenshot 4) -->
+        <!-- ==================================================================== -->
+        <div id="employeesRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+          
+          <!-- Top App Bar -->
+          <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
+            <button onclick="navigateToScreen('home')" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition" title="Back">
+              <i class="fa-solid fa-arrow-left text-lg text-white"></i>
+            </button>
+            <h1 class="text-xs sm:text-sm font-bold text-white tracking-wider uppercase ml-1 flex-1">
+              EMPLOYEES ATTENDANCE RECORDS
+            </h1>
+            <button onclick="toggleThemePicker(true)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white/90" title="Change Theme">
+              <i class="fa-solid fa-palette text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Background blobs -->
+          <div class="absolute top-16 -right-10 w-44 h-44 rounded-full bg-cyan-200/35 blur-2xl pointer-events-none"></div>
+          <div class="absolute bottom-20 -left-10 w-48 h-48 rounded-full bg-teal-200/30 blur-2xl pointer-events-none"></div>
+
+          <!-- Scrollable Content -->
+          <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-3 space-y-3 z-10">
+
+            <!-- Filter Card (Matching Screenshot 4) -->
+            <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2.5">
+              
+              <!-- Date Range: From Date & To Date -->
+              <div class="grid grid-cols-2 gap-2">
+                <!-- From Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">From Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftEmpRecordsDate('from', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="lblEmpRecordsFromDate" onclick="triggerNativeEmpRecordsDatePicker('from')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none">
+                      10-11-2026
+                    </span>
+                    <button onclick="shiftEmpRecordsDate('from', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeEmpRecordsFromDate" class="sr-only" onchange="onNativeEmpRecordsDateSelected('from', this.value)">
+                </div>
+
+                <!-- To Date Box -->
+                <div class="relative border border-slate-300 rounded-xl p-1.5 focus-within:border-theme-primary transition">
+                  <label class="absolute -top-2 left-2 px-1 bg-white text-[10px] text-slate-500 font-semibold leading-none">To Date</label>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <button onclick="shiftEmpRecordsDate('to', -1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="lblEmpRecordsToDate" onclick="triggerNativeEmpRecordsDatePicker('to')" class="lcd-font text-slate-800 font-bold text-xs cursor-pointer hover:text-theme-primary transition select-none">
+                      10-11-2026
+                    </span>
+                    <button onclick="shiftEmpRecordsDate('to', 1)" class="w-6 h-6 flex items-center justify-center text-theme-primary hover:bg-slate-100 rounded active:scale-90 font-bold transition">
+                      <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                  </div>
+                  <input type="date" id="nativeEmpRecordsToDate" class="sr-only" onchange="onNativeEmpRecordsDateSelected('to', this.value)">
+                </div>
+              </div>
+
+              <!-- Employee Status Dropdown -->
+              <div class="flex items-center justify-between pt-1">
+                <label class="text-xs font-semibold text-slate-700">Employee Status:</label>
+                <div class="relative">
+                  <select id="selEmpRecordsStatus" onchange="fetchAndRenderEmpRecordsData()" class="text-xs font-semibold text-slate-800 bg-transparent border-b border-slate-300 focus:border-theme-primary focus:outline-none pr-5 py-1 cursor-pointer">
+                    <option value="Continue" selected>Continue</option>
+                    <option value="Resigned">Resigned</option>
+                    <option value="Terminated">Terminated</option>
+                    <option value="All">All</option>
+                  </select>
+                  <i class="fa-solid fa-caret-down text-slate-500 text-xs absolute right-0 top-2 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Two Checkboxes: Only Missings & Include Absents -->
+              <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkEmpRecordsOnlyMissings" onchange="fetchAndRenderEmpRecordsData()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Only Missings</span>
+                </label>
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="chkEmpRecordsIncludeAbsents" onchange="fetchAndRenderEmpRecordsData()" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Include Absents</span>
+                </label>
+              </div>
+
+              <!-- Radio Buttons: Date Wise vs Employee Wise -->
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="radio" name="empRecordsViewMode" value="date" checked onchange="fetchAndRenderEmpRecordsData()" class="w-4 h-4 text-theme-primary accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Date Wise</span>
+                </label>
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="radio" name="empRecordsViewMode" value="employee" onchange="fetchAndRenderEmpRecordsData()" class="w-4 h-4 text-theme-primary accent-[#088395] cursor-pointer">
+                  <span class="text-xs font-semibold text-slate-700">Employee Wise</span>
+                </label>
+              </div>
+
+              <!-- Save PDF Action Button (Screenshot 4) -->
+              <div class="flex justify-end pt-1">
+                <button onclick="downloadEmpRecordsPdf()" class="px-4 py-2 bg-theme-primary hover:opacity-90 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+                  <i class="fa-solid fa-file-pdf"></i> Save PDF
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Grouped Data Table (Screenshot 4) -->
+            <div id="empRecordsContainer" class="space-y-3">
+              <!-- Dynamically populated with date group headers and tables -->
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 5. Bottom Navigation Grid with WORKING Popup Menus (Pic1.jpeg & QA Bug Report) -->
+        <div id="bottomNavBar" class="absolute bottom-0 left-0 right-0 bg-theme-primary text-white grid grid-cols-5 text-center py-2 px-1 z-40 shadow-lg border-t border-teal-600/30 transition-colors duration-300">
+          
+          <!-- Tab 1: Leave -->
+          <button id="navBtnLeave" onclick="toggleBottomMenu('leave')" class="nav-tab flex flex-col items-center justify-center p-1 rounded-xl transition active:scale-95 hover:bg-white/10">
+            <i class="fa-regular fa-calendar-days text-sm"></i>
+            <span class="text-[10px] mt-0.5 font-medium">Leave</span>
+          </button>
+
+          <!-- Tab 2: Payroll -->
+          <button id="navBtnPayroll" onclick="toggleBottomMenu('payroll')" class="nav-tab flex flex-col items-center justify-center p-1 rounded-xl transition active:scale-95 hover:bg-white/10">
+            <i class="fa-solid fa-money-bill-1-wave text-sm"></i>
+            <span class="text-[10px] mt-0.5 font-medium">Payroll</span>
+          </button>
+
+          <!-- Tab 3: Attendance -->
+          <button id="navBtnAttendance" onclick="toggleBottomMenu('attendance')" class="nav-tab flex flex-col items-center justify-center p-1 rounded-xl transition active:scale-95 hover:bg-white/10">
+            <i class="fa-regular fa-clock text-sm"></i>
+            <span class="text-[10px] mt-0.5 font-medium">Attendance</span>
+          </button>
+
+          <!-- Tab 4: ALS -->
+          <button id="navBtnSmartESS" onclick="toggleBottomMenu('smartess')" class="nav-tab flex flex-col items-center justify-center p-1 rounded-xl transition active:scale-95 hover:bg-white/10">
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+            <span class="text-[10px] mt-0.5 font-medium">ALS</span>
+          </button>
+
+          <!-- Tab 5: More (Drawer) -->
+          <button id="navBtnMore" onclick="toggleDrawer(true)" class="nav-tab flex flex-col items-center justify-center p-1 rounded-xl transition active:scale-95 hover:bg-white/10">
+            <i class="fa-solid fa-bars text-sm"></i>
+            <span class="text-[10px] mt-0.5 font-medium">More</span>
+          </button>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- POPUP MENUS ANCHORED ABOVE BOTTOM NAVIGATION (Matching QA Report) -->
+        <!-- ==================================================================== -->
+
+        <!-- Bottom Popup Backdrop Overlay -->
+        <div id="bottomMenuOverlay" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] z-30 transition-opacity" onclick="closeBottomMenu()"></div>
+
+        <!-- Dynamic Popup Menu Container -->
+        <div id="bottomMenuPopup" class="hidden absolute bottom-[58px] z-30 animate-menu">
+          <!-- Dynamically populated based on active bottom tab -->
+        </div>
+
+        <!-- POPUP 1: Profile Modal (pic2.jpeg) -->
+        <div id="profileModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <h2 class="text-xl font-bold text-center text-theme-primary">Profile</h2>
+
+            <!-- Username -->
+            <div class="border border-slate-300 rounded-xl p-2 relative">
+              <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Username</label>
+              <div class="flex items-center gap-2 pt-1">
+                <i class="fa-solid fa-user text-slate-400 text-xs"></i>
+                <span class="text-xs font-bold text-theme-primary">Sajjad Ali</span>
+              </div>
+            </div>
+
+            <!-- Title / Designation -->
+            <div class="border border-slate-300 rounded-xl p-2 relative">
+              <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Designation</label>
+              <div class="flex items-center gap-2 pt-1">
+                <i class="fa-solid fa-award text-slate-400 text-xs"></i>
+                <span class="text-xs font-bold text-theme-primary">Senior Product Designer</span>
+              </div>
+            </div>
+
+            <!-- User ID (ID: AK-8924) -->
+            <div class="border border-slate-300 rounded-xl p-2 relative">
+              <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">User ID</label>
+              <div class="flex items-center gap-2 pt-1">
+                <i class="fa-solid fa-id-card text-slate-400 text-xs"></i>
+                <span class="text-xs font-bold text-theme-primary">ID: AK-8924</span>
+              </div>
+            </div>
+
+            <!-- Service Length ("11 Months 20 Days") -->
+            <div class="border border-slate-300 rounded-xl p-2 relative">
+              <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Service Length</label>
+              <div class="flex items-center gap-2 pt-1">
+                <i class="fa-solid fa-calendar-check text-slate-400 text-xs"></i>
+                <span class="text-xs font-bold text-theme-primary" id="serviceTenureDisplay">11 Months 20 Days</span>
+              </div>
+            </div>
+
+            <!-- Server URL -->
+            <div class="border border-slate-300 rounded-xl p-2 relative flex items-center justify-between">
+              <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Url</label>
+              <div class="flex items-center gap-2 pt-1 text-slate-600 font-mono text-xs">
+                <i class="fa-solid fa-ellipsis text-slate-400"></i>
+                <span>als.enterprise.com</span>
+              </div>
+              <button class="w-7 h-7 bg-theme-primary text-white rounded-lg flex items-center justify-center text-xs hover:opacity-80">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+            </div>
+
+            <div class="text-right pt-2">
+              <button onclick="toggleProfileModal(false)" class="text-sm font-bold text-theme-primary hover:opacity-80">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POPUP 2: Sidebar Navigation Drawer (pic3.jpeg) -->
+        <div id="sidebarDrawer" class="hidden absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex">
+          <div class="w-64 bg-white h-full shadow-2xl flex flex-col">
+            <!-- Header -->
+            <div class="bg-theme-primary text-white p-4 flex items-center justify-between transition-colors duration-300">
+              <h2 class="text-base font-bold">ALS Mobile</h2>
+              <i class="fa-solid fa-lock text-sm"></i>
+            </div>
+
+            <!-- Menu List -->
+            <div class="flex-1 p-4 space-y-4 text-xs font-semibold text-slate-700">
+              <div onclick="showActionDetail('About ALS', 'ALS (Attendance Log System) - Enterprise Location-Based Attendance Management System v1.0.4\nDesigned for Sajjad Ali.')" class="flex items-center gap-3 hover:text-theme-primary cursor-pointer">
+                <i class="fa-solid fa-circle-info text-slate-500 text-sm w-4"></i>
+                <span>About</span>
+              </div>
+              <div onclick="showActionDetail('Language', 'Current Language: English (US)\nAvailable: English, Arabic, Urdu, French.')" class="flex items-center gap-3 hover:text-theme-primary cursor-pointer">
+                <i class="fa-solid fa-language text-slate-500 text-sm w-4"></i>
+                <span>Language ( English )</span>
+              </div>
+              <div onclick="showActionDetail('Device Information', 'Hardware UUID: DEV-S23-ULTRA-SECURE-UUID-9042\nModel: Samsung Galaxy S23 Ultra\nOS: Android 14\nBinding: ACTIVE')" class="flex items-center gap-3 hover:text-theme-primary cursor-pointer">
+                <i class="fa-solid fa-mobile-screen-button text-slate-500 text-sm w-4"></i>
+                <div>
+                  <div>Device Information</div>
+                  <div class="text-[9px] text-slate-400 font-normal">DEV-S23-ULTRA-SECURE</div>
+                </div>
+              </div>
+
+              <!-- Enable Check In/Out Switch -->
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                  <i class="fa-regular fa-clock text-slate-500 text-sm w-4"></i>
+                  <span>Enable Check In/Out</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="checkInOutToggle" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+
+              <!-- Local Authentication Switch (Fingerprint/Face ID) -->
+              <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-fingerprint text-slate-500 text-sm w-4"></i>
+                  <span>Local Authentication</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="localAuthToggle" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+
+              <!-- Logout -->
+              <div onclick="alert('Session logged out successfully.')" class="pt-4 border-t border-slate-100 flex items-center gap-3 text-rose-500 hover:text-rose-700 cursor-pointer">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm w-4"></i>
+                <span class="font-bold">Logout</span>
+              </div>
+            </div>
+
+            <!-- Drawer Close -->
+            <div class="p-3 border-t border-slate-100 text-center">
+              <button onclick="toggleDrawer(false)" class="text-xs text-slate-500 hover:text-slate-800 font-bold">
+                Close Menu
+              </button>
+            </div>
+          </div>
+          <!-- Click outside drawer to dismiss -->
+          <div class="flex-1" onclick="toggleDrawer(false)"></div>
+        </div>
+
+        <!-- POPUP 3: Attendance Rejection Log Modal (Pic1.jpeg Badge 4) -->
+        <div id="rejectionModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[85%]">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-200">
+              <h2 class="text-base font-bold text-rose-600 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Attendance Rejection Log
+              </h2>
+              <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold" id="modalRejectionBadge">4</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-3 space-y-2 text-xs" id="mobileRejectionsList">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <div class="text-right pt-2 border-t border-slate-100">
+              <button onclick="toggleRejectionModal(false)" class="text-sm font-bold text-slate-600 hover:text-slate-900">
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POPUP 4: Allowed Locations Modal -->
+        <div id="locationsModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl flex flex-col">
+            <h2 class="text-base font-bold text-theme-primary flex items-center gap-2 border-b pb-2">
+              <i class="fa-solid fa-location-dot"></i> Allowed Geofenced Locations
+            </h2>
+
+            <div class="py-3 space-y-2.5 text-xs">
+              <div class="p-3 bg-teal-50 border border-teal-200 rounded-xl">
+                <div class="font-bold text-teal-800">Headquarters - Tech Campus</div>
+                <div class="text-[11px] text-slate-600 mt-0.5">Tower 4, Cyber City Phase 2, Sector 62</div>
+                <div class="mt-1 flex items-center gap-2 font-mono text-[10px] text-teal-700 font-semibold">
+                  <span>Perimeter: 100m</span> &bull; <span>Lat: 28.6139, Lng: 77.2090</span>
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="font-bold text-slate-800">Downtown Innovation Hub</div>
+                <div class="text-[11px] text-slate-600 mt-0.5">Floor 12, Express Towers, Connaught Place</div>
+                <div class="mt-1 flex items-center gap-2 font-mono text-[10px] text-slate-600 font-semibold">
+                  <span>Perimeter: 80m</span> &bull; <span>Lat: 28.6289, Lng: 77.2154</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-right pt-2 border-t border-slate-100">
+              <button onclick="toggleLocationsModal(false)" class="text-sm font-bold text-theme-primary hover:opacity-80">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POPUP 5: Enhanced Color Theme & Customizer Modal (Task 2) -->
+        <div id="themePickerModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-4 shadow-2xl space-y-3 max-h-[90%] flex flex-col">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b pb-2 border-slate-200">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-palette text-theme-primary text-base"></i>
+                <h2 class="text-sm font-bold text-slate-800">Theme & Styling Customizer</h2>
+              </div>
+              <button onclick="toggleThemePicker(false)" class="text-slate-400 hover:text-slate-600 text-sm p-1">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <!-- Segmented Tab Switcher: Curated Swatches vs Color Wheel -->
+            <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+              <button id="tabBtnCurated" onclick="switchThemeTab('curated')" class="py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition">
+                12 Curated Themes
+              </button>
+              <button id="tabBtnCustom" onclick="switchThemeTab('custom')" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition">
+                Color Wheel & Hex
+              </button>
+            </div>
+
+            <!-- Panel 1: 12 Curated Enterprise Themes -->
+            <div id="panelCuratedThemes" class="flex-1 overflow-y-auto no-scrollbar space-y-2 max-h-[380px] pr-0.5">
+              <p class="text-[11px] text-slate-500 leading-tight">
+                Select from 12 enterprise-grade themes tailored for ALS:
+              </p>
+              <div class="grid grid-cols-3 gap-2 pt-1" id="curatedThemesGrid">
+                <!-- Injected dynamically by renderCuratedThemes() -->
+              </div>
+            </div>
+
+            <!-- Panel 2: Custom Color Wheel & Hex Picker -->
+            <div id="panelCustomColor" class="hidden flex-1 overflow-y-auto no-scrollbar space-y-3 max-h-[380px] pr-0.5 text-xs">
+              <p class="text-[11px] text-slate-500">
+                Choose custom primary & accent colors using the color wheel or enter exact hex codes:
+              </p>
+
+              <!-- Primary Color Input -->
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <label class="font-bold text-slate-700 flex items-center justify-between text-[11px]">
+                  <span>Primary Theme Color:</span>
+                  <span id="labelPrimaryHex" class="font-mono text-theme-primary">#088395</span>
+                </label>
+                <div class="flex items-center gap-2">
+                  <input type="color" id="pickerPrimary" value="#088395" oninput="onCustomColorChange()" class="w-10 h-10 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white">
+                  <input type="text" id="inputPrimaryHex" value="#088395" maxlength="7" oninput="onHexInputChange('primary', this.value)" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs uppercase focus:ring-1 focus:ring-theme-primary focus:outline-none">
+                </div>
+              </div>
+
+              <!-- Secondary Accent Color Input -->
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <label class="font-bold text-slate-700 flex items-center justify-between text-[11px]">
+                  <span>Secondary Accent Color:</span>
+                  <span id="labelSecondaryHex" class="font-mono text-theme-secondary">#0b8b98</span>
+                </label>
+                <div class="flex items-center gap-2">
+                  <input type="color" id="pickerSecondary" value="#0b8b98" oninput="onCustomColorChange()" class="w-10 h-10 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white">
+                  <input type="text" id="inputSecondaryHex" value="#0b8b98" maxlength="7" oninput="onHexInputChange('secondary', this.value)" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs uppercase focus:ring-1 focus:ring-theme-primary focus:outline-none">
+                </div>
+              </div>
+
+              <!-- Auto-Harmonize Button -->
+              <button onclick="autoHarmonizeColors()" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Auto-Harmonize Accent
+              </button>
+
+              <!-- Live Preview Card -->
+              <div class="p-2.5 rounded-xl border border-slate-200 space-y-1.5 bg-white shadow-inner">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Live Preview</div>
+                <div id="previewHeaderBox" class="p-2 rounded-lg text-white font-bold text-xs flex items-center justify-between shadow-sm" style="background-color: #088395;">
+                  <span>ALS Header</span>
+                  <i class="fa-solid fa-bell text-xs"></i>
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                  <button id="previewButtonBox" class="px-3 py-1 rounded-md text-white text-[10px] font-bold shadow-sm" style="background-color: #0b8b98;">
+                    Active Button
+                  </button>
+                  <span id="previewBadgeBox" class="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center shadow-sm" style="background-color: #088395;">
+                    8
+                  </span>
+                </div>
+              </div>
+
+              <!-- Apply Custom Theme Button -->
+              <button onclick="applyCustomTheme()" class="w-full py-2.5 bg-theme-primary text-white font-bold rounded-xl text-xs shadow-md hover:opacity-90 active:scale-95 transition">
+                Apply Custom Palette
+              </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-right pt-2 border-t border-slate-100">
+              <button onclick="toggleThemePicker(false)" class="text-xs font-bold text-slate-500 hover:text-slate-800">
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- POPUP 6: Action Detail Screen (Shows rich content when clicking any menu item) -->
+        <div id="actionDetailModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[85%]">
+            <div class="flex items-center justify-between border-b pb-3 border-slate-200">
+              <h2 id="actionDetailTitle" class="text-base font-bold text-theme-primary flex items-center gap-2">
+                Action Detail
+              </h2>
+              <button onclick="toggleActionDetail(false)" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-3 text-xs text-slate-600 space-y-3" id="actionDetailBody">
+              <!-- Dynamically populated -->
+            </div>
+
+            <div class="text-right pt-2 border-t border-slate-100">
+              <button onclick="toggleActionDetail(false)" class="px-4 py-1.5 bg-theme-primary text-white font-semibold rounded-lg text-xs hover:opacity-90">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Mobile Client Simulator Script with Bottom Menus & Theme Engine -->
+  <script>
+    const API_BASE = window.location.origin;
+    let offlineQueue = [];
+    let isOffline = false;
+    let activeBottomTab = null;
+
+    // ====================================================================
+    // EXPANDED THEME SYSTEM & CUSTOM COLOR WHEEL ENGINE (Task 2)
+    // ====================================================================
+
+    let activeThemeKey = 'teal';
+    let currentScreen = 'home';
+
+    // 12 Curated Enterprise Themes
+    const THEMES = {
+      teal: {
+        name: 'Classic Teal',
+        primary: '#088395',
+        secondary: '#0b8b98',
+        border: '#99d5e3',
+        cardFrom: '#d2eef5',
+        cardTo: '#ebf7fa',
+        viewportBg: '#e6f4f8',
+        checkInBg: '#c7edf5',
+        checkInHover: '#b0e4ee',
+        checkInText: '#0f766e'
+      },
+      blue: {
+        name: 'Ocean Blue',
+        primary: '#1d4ed8',
+        secondary: '#2563eb',
+        border: '#bfdbfe',
+        cardFrom: '#dbeafe',
+        cardTo: '#eff6ff',
+        viewportBg: '#e0e7ff',
+        checkInBg: '#bfdbfe',
+        checkInHover: '#93c5fd',
+        checkInText: '#1e40af'
+      },
+      green: {
+        name: 'Emerald Forest',
+        primary: '#047857',
+        secondary: '#059669',
+        border: '#a7f3d0',
+        cardFrom: '#d1fae5',
+        cardTo: '#ecfdf5',
+        viewportBg: '#dcfce7',
+        checkInBg: '#a7f3d0',
+        checkInHover: '#6ee7b7',
+        checkInText: '#065f46'
+      },
+      purple: {
+        name: 'Royal Purple',
+        primary: '#6d28d9',
+        secondary: '#7c3aed',
+        border: '#ddd6fe',
+        cardFrom: '#ede9fe',
+        cardTo: '#f5f3ff',
+        viewportBg: '#f3e8ff',
+        checkInBg: '#ddd6fe',
+        checkInHover: '#c4b5fd',
+        checkInText: '#5b21b6'
+      },
+      rose: {
+        name: 'Ruby Rose',
+        primary: '#be123c',
+        secondary: '#e11d48',
+        border: '#fecdd3',
+        cardFrom: '#ffe4e6',
+        cardTo: '#fff1f2',
+        viewportBg: '#ffe4e6',
+        checkInBg: '#fecdd3',
+        checkInHover: '#fda4af',
+        checkInText: '#9f1239'
+      },
+      amber: {
+        name: 'Sunset Amber',
+        primary: '#c2410c',
+        secondary: '#ea580c',
+        border: '#fed7aa',
+        cardFrom: '#ffedd5',
+        cardTo: '#fff7ed',
+        viewportBg: '#fef3c7',
+        checkInBg: '#fed7aa',
+        checkInHover: '#fdba74',
+        checkInText: '#9a3412'
+      },
+      indigo: {
+        name: 'Indigo Twilight',
+        primary: '#4338ca',
+        secondary: '#4f46e5',
+        border: '#c7d2fe',
+        cardFrom: '#e0e7ff',
+        cardTo: '#eef2ff',
+        viewportBg: '#eef2ff',
+        checkInBg: '#c7d2fe',
+        checkInHover: '#a5b4fc',
+        checkInText: '#3730a3'
+      },
+      slate: {
+        name: 'Slate Obsidian',
+        primary: '#334155',
+        secondary: '#475569',
+        border: '#cbd5e1',
+        cardFrom: '#e2e8f0',
+        cardTo: '#f1f5f9',
+        viewportBg: '#f8fafc',
+        checkInBg: '#cbd5e1',
+        checkInHover: '#94a3b8',
+        checkInText: '#1e293b'
+      },
+      cyan: {
+        name: 'Electric Cyan',
+        primary: '#0284c7',
+        secondary: '#0ea5e9',
+        border: '#bae6fd',
+        cardFrom: '#e0f2fe',
+        cardTo: '#f0f9ff',
+        viewportBg: '#f0f9ff',
+        checkInBg: '#bae6fd',
+        checkInHover: '#7dd3fc',
+        checkInText: '#0369a1'
+      },
+      crimson: {
+        name: 'Crimson Burgundy',
+        primary: '#991b1b',
+        secondary: '#b91c1c',
+        border: '#fecaca',
+        cardFrom: '#fee2e2',
+        cardTo: '#fef2f2',
+        viewportBg: '#fef2f2',
+        checkInBg: '#fecaca',
+        checkInHover: '#fca5a5',
+        checkInText: '#7f1d1d'
+      },
+      forest: {
+        name: 'Forest Pine',
+        primary: '#14532d',
+        secondary: '#166534',
+        border: '#bbf7d0',
+        cardFrom: '#dcfce7',
+        cardTo: '#f0fdf4',
+        viewportBg: '#f0fdf4',
+        checkInBg: '#bbf7d0',
+        checkInHover: '#86efac',
+        checkInText: '#14532d'
+      },
+      midnight: {
+        name: 'Midnight Navy',
+        primary: '#0f172a',
+        secondary: '#1e293b',
+        border: '#94a3b8',
+        cardFrom: '#e2e8f0',
+        cardTo: '#f8fafc',
+        viewportBg: '#f1f5f9',
+        checkInBg: '#cbd5e1',
+        checkInHover: '#94a3b8',
+        checkInText: '#0f172a'
+      }
+    };
+
+    function hexToRgb(hex) {
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const num = parseInt(hex, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    }
+
+    function hslToRgb(h, s, l) {
+      h /= 360; s /= 100; l /= 100;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return { r: r * 255, g: g * 255, b: b * 255 };
+    }
+
+    function adjustHexAlpha(hex, opacity) {
+      const rgb = hexToRgb(hex);
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+    }
+
+    // Populate Curated Theme Swatches Grid
+    function renderCuratedThemes() {
+      const grid = document.getElementById('curatedThemesGrid');
+      if (!grid) return;
+
+      grid.innerHTML = Object.entries(THEMES).map(([key, t]) => {
+        const isSelected = activeThemeKey === key;
+        return `
+          <button onclick="setAppTheme('${key}')" class="p-2 rounded-xl border ${isSelected ? 'border-theme-primary ring-2 ring-theme-primary/30 bg-slate-50' : 'border-slate-200 hover:border-slate-300'} flex flex-col items-center gap-1 active:scale-95 transition relative">
+            <span class="w-8 h-8 rounded-full overflow-hidden shadow-md flex border-2 border-white">
+              <span class="w-1/2 h-full" style="background-color: ${t.primary};"></span>
+              <span class="w-1/2 h-full" style="background-color: ${t.secondary};"></span>
+            </span>
+            <span class="text-[10px] font-semibold text-slate-700 truncate w-full text-center">${t.name}</span>
+            ${isSelected ? '<span class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-theme-primary text-white text-[8px] flex items-center justify-center"><i class="fa-solid fa-check"></i></span>' : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Switch between Curated Themes Tab and Custom Color Wheel Tab
+    function switchThemeTab(tab) {
+      const tabCurated = document.getElementById('tabBtnCurated');
+      const tabCustom = document.getElementById('tabBtnCustom');
+      const panelCurated = document.getElementById('panelCuratedThemes');
+      const panelCustom = document.getElementById('panelCustomColor');
+
+      if (tab === 'curated') {
+        tabCurated.className = 'py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition';
+        tabCustom.className = 'py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition';
+        panelCurated.classList.remove('hidden');
+        panelCustom.classList.add('hidden');
+      } else {
+        tabCustom.className = 'py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition';
+        tabCurated.className = 'py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition';
+        panelCustom.classList.remove('hidden');
+        panelCurated.classList.add('hidden');
+        updateThemeCustomizerPreview();
+      }
+    }
+
+    // Color Pickers Input Handler
+    function onCustomColorChange() {
+      const pColor = document.getElementById('pickerPrimary').value;
+      const sColor = document.getElementById('pickerSecondary').value;
+
+      document.getElementById('inputPrimaryHex').value = pColor.toUpperCase();
+      document.getElementById('inputSecondaryHex').value = sColor.toUpperCase();
+      document.getElementById('labelPrimaryHex').innerText = pColor.toUpperCase();
+      document.getElementById('labelSecondaryHex').innerText = sColor.toUpperCase();
+
+      updateThemeCustomizerPreview();
+    }
+
+    function onHexInputChange(field, val) {
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        if (field === 'primary') {
+          document.getElementById('pickerPrimary').value = val;
+          document.getElementById('labelPrimaryHex').innerText = val.toUpperCase();
+        } else {
+          document.getElementById('pickerSecondary').value = val;
+          document.getElementById('labelSecondaryHex').innerText = val.toUpperCase();
+        }
+        updateThemeCustomizerPreview();
+      }
+    }
+
+    // Automatically Harmonize Accent Color from Primary Color
+    function autoHarmonizeColors() {
+      const pColor = document.getElementById('pickerPrimary').value;
+      const rgb = hexToRgb(pColor);
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+      // Shift hue by +25 degrees and increase lightness by 6%
+      const harmonizedHue = (hsl.h + 25) % 360;
+      const harmonizedLight = Math.min(85, Math.max(30, hsl.l + 6));
+      const sRgb = hslToRgb(harmonizedHue, hsl.s, harmonizedLight);
+      const sHex = rgbToHex(sRgb.r, sRgb.g, sRgb.b).toUpperCase();
+
+      document.getElementById('pickerSecondary').value = sHex;
+      document.getElementById('inputSecondaryHex').value = sHex;
+      document.getElementById('labelSecondaryHex').innerText = sHex;
+
+      updateThemeCustomizerPreview();
+      logConsole(`✨ Auto-harmonized accent color to ${sHex}`);
+    }
+
+    function updateThemeCustomizerPreview() {
+      const pColor = document.getElementById('pickerPrimary').value;
+      const sColor = document.getElementById('pickerSecondary').value;
+
+      const pHeader = document.getElementById('previewHeaderBox');
+      const pBtn = document.getElementById('previewButtonBox');
+      const pBadge = document.getElementById('previewBadgeBox');
+
+      if (pHeader) pHeader.style.backgroundColor = pColor;
+      if (pBtn) pBtn.style.backgroundColor = sColor;
+      if (pBadge) pBadge.style.backgroundColor = pColor;
+    }
+
+    function applyCustomTheme() {
+      const pColor = document.getElementById('pickerPrimary').value;
+      const sColor = document.getElementById('pickerSecondary').value;
+
+      const customThemeObj = {
+        name: `Custom (${pColor.toUpperCase()})`,
+        primary: pColor,
+        secondary: sColor,
+        border: adjustHexAlpha(pColor, 0.35),
+        cardFrom: adjustHexAlpha(pColor, 0.16),
+        cardTo: adjustHexAlpha(sColor, 0.08),
+        viewportBg: adjustHexAlpha(pColor, 0.08),
+        checkInBg: adjustHexAlpha(pColor, 0.22),
+        checkInHover: adjustHexAlpha(pColor, 0.32),
+        checkInText: pColor
+      };
+
+      setAppThemeObject(customThemeObj, 'custom');
+      toggleThemePicker(false);
+      logConsole(`🎨 Custom palette applied successfully (${pColor} / ${sColor})!`);
+    }
+
+    function setAppThemeObject(theme, key) {
+      activeThemeKey = key;
+      const root = document.documentElement;
+
+      root.style.setProperty('--theme-primary', theme.primary);
+      root.style.setProperty('--theme-secondary', theme.secondary);
+      root.style.setProperty('--theme-border', theme.border);
+      root.style.setProperty('--theme-card-from', theme.cardFrom);
+      root.style.setProperty('--theme-card-to', theme.cardTo);
+      root.style.setProperty('--theme-viewport-bg', theme.viewportBg);
+      root.style.setProperty('--theme-checkin-bg', theme.checkInBg);
+      root.style.setProperty('--theme-checkin-hover', theme.checkInHover);
+      root.style.setProperty('--theme-checkin-text', theme.checkInText);
+      root.style.setProperty('--theme-active-nav', 'rgba(255, 255, 255, 0.28)');
+
+      const viewport = document.getElementById('mobileAppViewport');
+      const bottomNav = document.getElementById('bottomNavBar');
+      const profileCard = document.getElementById('profileCardHeader');
+      const activePill = document.getElementById('activeThemePill');
+
+      if (viewport) viewport.style.backgroundColor = theme.viewportBg;
+      if (bottomNav) bottomNav.style.backgroundColor = theme.primary;
+      if (profileCard) profileCard.style.backgroundImage = `linear-gradient(to right, ${theme.cardFrom}, ${theme.cardTo})`;
+      if (activePill) activePill.innerText = theme.name;
+
+      renderCuratedThemes();
+
+      // If on Attendance Summary screen, re-render to reflect new theme accent
+      if (currentScreen === 'attendance-summary') {
+        const badgeAbsent = document.getElementById('badgeAbsent');
+        const badgeLeave = document.getElementById('badgeLeave');
+        const badgeOffDay = document.getElementById('badgeOffDay');
+        const badgePresent = document.getElementById('badgePresent');
+        [badgeAbsent, badgeLeave, badgeOffDay, badgePresent].forEach(b => {
+          if (b) b.style.backgroundColor = theme.primary;
+        });
+      }
+
+      localStorage.setItem('als_theme', JSON.stringify({ key, theme }));
+    }
+
+    function setAppTheme(themeKey) {
+      const theme = THEMES[themeKey] || THEMES.teal;
+      setAppThemeObject(theme, themeKey);
+      toggleThemePicker(false);
+      logConsole(`🎨 Theme updated to: ${theme.name}`);
+    }
+
+    // Toggle Theme Picker
+    function toggleThemePicker(show) {
+      const modal = document.getElementById('themePickerModal');
+      if (modal) {
+        modal.classList.toggle('hidden', !show);
+        if (show) {
+          renderCuratedThemes();
+          updateThemeCustomizerPreview();
+        }
+      }
+    }
+
+    function toggleLockModal(show) {
+      alert(show ? '🔒 Screen locked for security. Tap to unlock.' : 'Unlocked');
+    }
+
+    // Toggle Modals
+    function toggleProfileModal(show) {
+      document.getElementById('profileModal').classList.toggle('hidden', !show);
+    }
+    function toggleDrawer(show) {
+      document.getElementById('sidebarDrawer').classList.toggle('hidden', !show);
+      closeBottomMenu();
+    }
+    function toggleRejectionModal(show) {
+      document.getElementById('rejectionModal').classList.toggle('hidden', !show);
+      if (show) loadRejectionList();
+    }
+    function toggleLocationsModal(show) {
+      document.getElementById('locationsModal').classList.toggle('hidden', !show);
+    }
+
+    function toggleActionDetail(show, title, contentHtml) {
+      const modal = document.getElementById('actionDetailModal');
+      if (show) {
+        document.getElementById('actionDetailTitle').innerText = title || 'Details';
+        document.getElementById('actionDetailBody').innerHTML = contentHtml || '<p>Feature opened successfully.</p>';
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // ====================================================================
+    // BOTTOM NAVIGATION POPUP MENUS IMPLEMENTATION (Fixed for QA Report)
+    // ====================================================================
+
+    const MENU_DEFINITIONS = {
+      // Page 3 (Left): Leave Menu
+      leave: {
+        anchorClass: 'left-3 w-64',
+        items: [
+          {
+            title: 'Apply Leave',
+            subtitle: 'Request for a leave here',
+            icon: 'fa-regular fa-file-lines',
+            onClick: () => showApplyLeaveDialog()
+          },
+          {
+            title: 'My Leaves',
+            subtitle: 'Your requested leaves here',
+            icon: 'fa-regular fa-calendar-days',
+            onClick: () => showMyLeavesDialog()
+          },
+          {
+            title: 'My Approvals',
+            subtitle: 'Your pending leaves here',
+            icon: 'fa-solid fa-users',
+            onClick: () => showMyApprovalsDialog()
+          }
+        ]
+      },
+
+      // Page 3 (Right): Payroll Menu
+      payroll: {
+        anchorClass: 'left-16 w-56',
+        items: [
+          {
+            title: 'Salary',
+            subtitle: '',
+            icon: 'fa-solid fa-table-cells',
+            onClick: () => showSalaryDialog()
+          },
+          {
+            title: 'Loan',
+            subtitle: '',
+            icon: 'fa-solid fa-money-bill-wave',
+            onClick: () => showLoanDialog()
+          }
+        ]
+      },
+
+      // Page 4 (Left): Attendance Menu
+      attendance: {
+        anchorClass: 'left-8 right-8 w-auto',
+        items: [
+          {
+            title: 'My Attendance Summary',
+            subtitle: 'Your attendance summary here',
+            icon: 'fa-solid fa-chart-pie',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('attendance-summary');
+            }
+          },
+          {
+            title: 'My Attendance Records',
+            subtitle: 'Your attendance records here',
+            icon: 'fa-regular fa-file-lines',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('attendance-records');
+            }
+          },
+          {
+            title: 'My Roster',
+            subtitle: 'Your Roster is here',
+            icon: 'fa-regular fa-clipboard',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('my-roster');
+            }
+          },
+          {
+            title: 'Location/Department/Shift wise attendance Summary',
+            subtitle: 'Location Department Shift wise attendance summary here',
+            icon: 'fa-solid fa-sitemap',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('location-shift-summary');
+            }
+          },
+          {
+            title: 'Employees Attendance Summary',
+            subtitle: 'Employees attendance summary here',
+            icon: 'fa-solid fa-users',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('employees-attendance-summary');
+            }
+          },
+          {
+            title: 'Employees Attendance Records',
+            subtitle: 'Employees attendance records here',
+            icon: 'fa-solid fa-user-group',
+            onClick: () => {
+              closeBottomMenu();
+              navigateToScreen('employees-attendance-records');
+            }
+          }
+        ]
+      },
+
+      // Page 4 (Right): ALS Menu
+      smartess: {
+        anchorClass: 'right-3 w-64',
+        items: [
+          {
+            title: 'Generate Request',
+            subtitle: 'Request Management System',
+            icon: 'fa-solid fa-file-circle-plus',
+            onClick: () => showGenerateRequestDialog()
+          },
+          {
+            title: 'Manage Request',
+            subtitle: 'Request Management System',
+            icon: 'fa-solid fa-list-check',
+            onClick: () => showManageRequestDialog()
+          },
+          {
+            title: 'Job Wise Pending Request',
+            subtitle: 'Request Management System',
+            icon: 'fa-solid fa-briefcase',
+            onClick: () => showJobWiseRequestDialog()
+          },
+          {
+            title: 'Department Wise Pending Request',
+            subtitle: 'Request Management System',
+            icon: 'fa-solid fa-building-user',
+            onClick: () => showDepartmentWiseRequestDialog()
+          },
+          {
+            title: 'Request Management System',
+            subtitle: 'Request Management System',
+            icon: 'fa-solid fa-folder-tree',
+            onClick: () => showRMSOverviewDialog()
+          }
+        ]
+      }
+    };
+
+    function toggleBottomMenu(menuKey) {
+      const popup = document.getElementById('bottomMenuPopup');
+      const overlay = document.getElementById('bottomMenuOverlay');
+
+      // If clicking the same open tab, toggle it off
+      if (activeBottomTab === menuKey && !popup.classList.contains('hidden')) {
+        closeBottomMenu();
+        return;
+      }
+
+      const menuDef = MENU_DEFINITIONS[menuKey];
+      if (!menuDef) return;
+
+      activeBottomTab = menuKey;
+
+      // Update active highlight on bottom navigation tabs
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('bg-white/20', 'shadow-inner'));
+      const activeBtnId = 'navBtn' + menuKey.charAt(0).toUpperCase() + menuKey.slice(1);
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) activeBtn.classList.add('bg-white/20', 'shadow-inner');
+
+      // Set position and width class
+      popup.className = `absolute bottom-[58px] z-30 animate-menu ${menuDef.anchorClass}`;
+
+      // Build menu HTML matching the exact reference screenshots in the PDF
+      let html = `
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+      `;
+
+      menuDef.items.forEach((item, index) => {
+        html += `
+          <button onclick="handleMenuItemClick('${menuKey}', ${index})" class="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center justify-between gap-3 active:bg-slate-100 transition">
+            <div class="flex-1 pr-2">
+              <div class="text-xs font-bold text-slate-800 leading-snug">${item.title}</div>
+              ${item.subtitle ? `<div class="text-[10px] text-slate-400 mt-0.5">${item.subtitle}</div>` : ''}
+            </div>
+            <div class="text-slate-400 text-sm flex-shrink-0">
+              <i class="${item.icon}"></i>
+            </div>
+          </button>
+        `;
+      });
+
+      html += `</div>`;
+
+      popup.innerHTML = html;
+      popup.classList.remove('hidden');
+      overlay.classList.remove('hidden');
+
+      logConsole(`📂 Opened [${menuKey.toUpperCase()}] popup menu.`);
+    }
+
+    function closeBottomMenu() {
+      document.getElementById('bottomMenuPopup').classList.add('hidden');
+      document.getElementById('bottomMenuOverlay').classList.add('hidden');
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('bg-white/20', 'shadow-inner'));
+      activeBottomTab = null;
+    }
+
+    function handleMenuItemClick(menuKey, itemIndex) {
+      const item = MENU_DEFINITIONS[menuKey]?.items[itemIndex];
+      closeBottomMenu();
+      if (item && item.onClick) {
+        item.onClick();
+      }
+    }
+
+    // ====================================================================
+    // ACTION DETAIL DIALOGS (Rich Interactive Views for Menu Options)
+    // ====================================================================
+
+    function showApplyLeaveDialog() {
+      const content = `
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Leave Type</label>
+            <select class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50">
+              <option>Casual Leave (Balance: 8)</option>
+              <option>Annual Leave (Balance: 14)</option>
+              <option>Sick Leave (Balance: 6)</option>
+              <option>Loss of Pay (LOP)</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">From Date</label>
+              <input type="date" value="2026-11-12" class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1">To Date</label>
+              <input type="date" value="2026-11-13" class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Reason / Notes</label>
+            <textarea placeholder="Provide reason for leave..." rows="2" class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50"></textarea>
+          </div>
+          <button onclick="alert('Leave request submitted successfully for approval!'); toggleActionDetail(false);" class="w-full py-2 bg-theme-primary text-white rounded-xl font-bold text-xs">
+            Submit Leave Request
+          </button>
+        </div>
+      `;
+      toggleActionDetail(true, 'Apply Leave', content);
+    }
+
+    function showMyLeavesDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex justify-between items-center">
+            <div>
+              <div class="font-bold text-emerald-800">Casual Leave (2 Days)</div>
+              <div class="text-[10px] text-slate-500">01 Nov 2026 - 02 Nov 2026</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800 text-[10px] font-bold">Approved</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex justify-between items-center">
+            <div>
+              <div class="font-bold text-amber-800">Sick Leave (1 Day)</div>
+              <div class="text-[10px] text-slate-500">24 Oct 2026</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold">Pending</span>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'My Leaves', content);
+    }
+
+    function showMyApprovalsDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-800">Farhan Ahmed (Junior Dev)</div>
+            <div class="text-[10px] text-slate-500">Annual Leave (3 Days) &bull; 15 Nov - 18 Nov</div>
+            <div class="mt-2 flex gap-2">
+              <button onclick="alert('Approved!'); toggleActionDetail(false);" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold">Approve</button>
+              <button onclick="alert('Rejected'); toggleActionDetail(false);" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold">Reject</button>
+            </div>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'My Approvals', content);
+    }
+
+    // Currency Formatter Helper (Pakistani Rupees - PKR / Rs.)
+    function formatPKR(amount, includeDecimals = false) {
+      const formatted = Math.abs(amount).toLocaleString('en-PK', {
+        minimumFractionDigits: includeDecimals ? 2 : 0,
+        maximumFractionDigits: includeDecimals ? 2 : 0
+      });
+      return amount < 0 ? `-PKR ${formatted}` : `PKR ${formatted}`;
+    }
+
+    function showSalaryDialog() {
+      const salaryData = {
+        month: 'October 2026',
+        basic: 320000,
+        houseRent: 85000,
+        conveyance: 35000,
+        deductions: -15000,
+      };
+      const netPay = salaryData.basic + salaryData.houseRent + salaryData.conveyance + salaryData.deductions; // 425,000
+
+      const content = `
+        <div class="space-y-3">
+          <div class="p-3 rounded-2xl bg-teal-50 border border-teal-200">
+            <div class="text-[10px] text-slate-500 uppercase font-semibold">Latest Pay Slip: ${salaryData.month}</div>
+            <div class="text-xl font-bold text-teal-800 mt-0.5">${formatPKR(netPay)} <span class="text-xs font-normal text-slate-500">(Rs. 425,000 Net)</span></div>
+          </div>
+          <div class="space-y-1.5 text-[11px]">
+            <div class="flex justify-between py-1 border-b border-slate-100">
+              <span class="text-slate-500">Basic Salary</span>
+              <span class="font-semibold text-slate-800">${formatPKR(salaryData.basic)}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-100">
+              <span class="text-slate-500">House Rent Allowance</span>
+              <span class="font-semibold text-slate-800">${formatPKR(salaryData.houseRent)}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-100">
+              <span class="text-slate-500">Conveyance Allowance</span>
+              <span class="font-semibold text-slate-800">${formatPKR(salaryData.conveyance)}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-100">
+              <span class="text-rose-500">Tax Deductions</span>
+              <span class="font-semibold text-rose-600">${formatPKR(salaryData.deductions)}</span>
+            </div>
+          </div>
+          <button onclick="alert('Downloading Payslip PDF (PKR)...');" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i> Download Salary Slip (PDF)
+          </button>
+        </div>
+      `;
+      toggleActionDetail(true, 'Salary Slip', content);
+    }
+
+    function showLoanDialog() {
+      const maxLoan = 1000000; // PKR 1,000,000 (10 Lakh)
+      const content = `
+        <div class="space-y-3">
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="text-[10px] text-slate-500">Active Company Loans</div>
+            <div class="text-lg font-bold text-slate-800 mt-0.5">0 Active Loans</div>
+            <div class="text-[10px] text-emerald-600 font-semibold mt-1">Eligible to apply for up to ${formatPKR(maxLoan)} (Rs. 10 Lakh)</div>
+          </div>
+          <button onclick="alert('Loan Application workflow opened for PKR advance.'); toggleActionDetail(false);" class="w-full py-2 bg-theme-primary text-white rounded-xl font-bold text-xs">
+            Apply for Loan / Advance
+          </button>
+        </div>
+      `;
+      toggleActionDetail(true, 'Employee Loan', content);
+    }
+
+    function showAttendanceSummaryDialog() {
+      const content = `
+        <div class="space-y-2.5">
+          <div class="p-3 bg-teal-50 border border-teal-200 rounded-xl">
+            <div class="text-xs font-bold text-teal-800">Monthly Attendance Rate: 98.4%</div>
+            <div class="text-[10px] text-slate-500">Working Days: 22 &bull; Total Hours: 176 hrs</div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-center text-xs">
+            <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div class="font-bold text-emerald-700 text-base">21</div>
+              <div class="text-[10px] text-emerald-800 font-semibold">Days Present</div>
+            </div>
+            <div class="p-2 bg-rose-50 border border-rose-200 rounded-xl">
+              <div class="font-bold text-rose-600 text-base">0</div>
+              <div class="text-[10px] text-rose-700 font-semibold">Days Absent</div>
+            </div>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'My Attendance Summary', content);
+    }
+
+    function showAttendanceRecordsDialog() {
+      const content = `
+        <div class="space-y-1.5 text-xs">
+          <div class="p-2 rounded-lg bg-slate-50 border flex justify-between">
+            <div><b>06 Nov 2026:</b> In: 09:54 AM</div>
+            <span class="text-emerald-600 font-semibold">Verified</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-50 border flex justify-between">
+            <div><b>05 Nov 2026:</b> In: 09:15 AM &bull; Out: 06:10 PM</div>
+            <span class="text-emerald-600 font-semibold">Present</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-50 border flex justify-between">
+            <div><b>04 Nov 2026:</b> In: 09:02 AM &bull; Out: 06:00 PM</div>
+            <span class="text-emerald-600 font-semibold">Present</span>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'My Attendance Records', content);
+    }
+
+    function showMyRosterDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-3 bg-slate-50 rounded-xl border">
+            <div class="font-bold text-slate-800">Standard General Shift</div>
+            <div class="text-xs text-slate-500 mt-1">Monday – Friday: 09:00 AM to 06:00 PM</div>
+            <div class="text-xs text-slate-500">Saturday & Sunday: Off Day</div>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'My Shift Roster', content);
+    }
+
+    function showLocationShiftSummaryDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 border">
+            <div class="font-bold text-slate-800">Tech Park Campus - Sector 62</div>
+            <div class="text-[10px] text-slate-500">General Shift (09:00 - 18:00): 42 Present / 2 On Leave</div>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'Shift & Location Summary', content);
+    }
+
+    function showEmployeesAttendanceSummaryDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 border">
+            <div class="font-bold text-slate-800">Engineering Department</div>
+            <div class="text-[10px] text-slate-500">Total Staff: 18 &bull; On Site: 17 &bull; Leave: 1</div>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'Employees Attendance Summary', content);
+    }
+
+    function showEmployeesAttendanceRecordsDialog() {
+      const content = `
+        <div class="space-y-1.5">
+          <div class="p-2 bg-slate-50 rounded-lg border flex justify-between items-center text-xs">
+            <span><b>Sajjad Ali:</b> 09:54 AM</span>
+            <span class="text-emerald-600 font-bold">Present</span>
+          </div>
+          <div class="p-2 bg-slate-50 rounded-lg border flex justify-between items-center text-xs">
+            <span><b>Farhan Ahmed:</b> 09:12 AM</span>
+            <span class="text-emerald-600 font-bold">Present</span>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'Team Attendance Records', content);
+    }
+
+    function showGenerateRequestDialog() {
+      const content = `
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Request Category</label>
+            <select class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50">
+              <option>Attendance Regularization</option>
+              <option>Shift Change Request</option>
+              <option>IT Asset Request</option>
+              <option>Experience Certificate</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Details / Justification</label>
+            <textarea placeholder="Describe your request..." rows="3" class="w-full p-2 border border-slate-200 rounded-xl text-xs bg-slate-50"></textarea>
+          </div>
+          <button onclick="alert('RMS Request submitted successfully!'); toggleActionDetail(false);" class="w-full py-2 bg-theme-primary text-white rounded-xl font-bold text-xs">
+            Submit Request
+          </button>
+        </div>
+      `;
+      toggleActionDetail(true, 'Generate Request', content);
+    }
+
+    function showManageRequestDialog() {
+      const content = `
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-slate-50 border flex justify-between items-center">
+            <div>
+              <div class="font-bold text-slate-800">Asset: Dual Monitor Request</div>
+              <div class="text-[10px] text-slate-500">Ticket #REQ-8841 &bull; 02 Nov 2026</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold">In Review</span>
+          </div>
+        </div>
+      `;
+      toggleActionDetail(true, 'Manage Requests', content);
+    }
+
+    function showJobWiseRequestDialog() {
+      const content = `<p class="p-3 bg-slate-50 rounded-xl border">Displaying pending workflow requests filtered for Software Engineering roles.</p>`;
+      toggleActionDetail(true, 'Job Wise Pending Request', content);
+    }
+
+    function showDepartmentWiseRequestDialog() {
+      const content = `<p class="p-3 bg-slate-50 rounded-xl border">Displaying pending workflow requests filtered for Software Development & Cloud Dept.</p>`;
+      toggleActionDetail(true, 'Department Wise Pending Request', content);
+    }
+
+    function showRMSOverviewDialog() {
+      const content = `<p class="p-3 bg-slate-50 rounded-xl border">ALS (Attendance Log System) Request Management System (RMS) Enterprise Portal v2.4.</p>`;
+      toggleActionDetail(true, 'Request Management System', content);
+    }
+
+    // ====================================================================
+    // OFFLINE & GEOFENCE CORE ENGINE SCRIPTING
+    // ====================================================================
+
+    // Offline / Airplane Mode Toggle
+    document.getElementById('offlineToggle').addEventListener('change', (e) => {
+      isOffline = e.target.checked;
+      document.getElementById('mobileOfflineBanner').classList.toggle('hidden', !isOffline);
+      logConsole(isOffline ? '✈️ Airplane mode active. Device offline.' : '🌐 Network restored. Online.');
+      if (!isOffline && offlineQueue.length > 0) {
+        syncOfflineQueue();
+      }
+    });
+
+    function logConsole(msg) {
+      document.getElementById('consoleStatus').innerHTML = msg;
+    }
+
+    // State for Check-In and Check-Out Timestamps
+    let lastCheckInTime = '09:54 AM';
+    let lastCheckOutTime = null;
+
+    // Conditionally renders Check-In and Check-Out timestamps below their respective circles
+    function renderPunchTimes() {
+      const checkInEl = document.getElementById('lastCheckInDisplay');
+      const checkOutEl = document.getElementById('lastCheckOutDisplay');
+
+      if (lastCheckInTime) {
+        checkInEl.innerText = lastCheckInTime;
+        checkInEl.classList.remove('hidden');
+      } else {
+        checkInEl.classList.add('hidden');
+      }
+
+      if (lastCheckOutTime) {
+        checkOutEl.innerText = lastCheckOutTime;
+        checkOutEl.classList.remove('hidden');
+      } else {
+        checkOutEl.classList.add('hidden');
+      }
+    }
+
+    // Perform Check-In or Check-Out Punch
+    async function mobileCheckIn(punchType) {
+      closeBottomMenu();
+      const isCheckEnabled = document.getElementById('checkInOutToggle').checked;
+      if (!isCheckEnabled) {
+        alert('Check In/Out is disabled in settings.');
+        return;
+      }
+
+      const preset = document.getElementById('gpsPreset').value;
+      let payload = {
+        officeId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+        punchType: punchType,
+        accuracyMeters: 6.4,
+        clientTimestamp: new Date().toISOString(),
+        deviceId: 'DEV-S23-ULTRA-SECURE-UUID-9042',
+        isMockProvider: false,
+        isRootedOrJailbroken: false
+      };
+
+      if (preset === 'INSIDE') {
+        payload.latitude = 28.613955;
+        payload.longitude = 77.209045; // 14m from center
+      } else if (preset === 'OUTSIDE') {
+        payload.latitude = 28.621000;
+        payload.longitude = 77.214500; // 940m away
+      } else if (preset === 'MOCK') {
+        payload.latitude = 28.613939;
+        payload.longitude = 77.209021;
+        payload.isMockProvider = true; // Fake GPS!
+      } else if (preset === 'UNREGISTERED') {
+        payload.latitude = 28.613939;
+        payload.longitude = 77.209021;
+        payload.deviceId = 'DEV-UNAUTHORIZED-FRIEND-PHONE-404'; // Buddy punch!
+      }
+
+      // If Offline, push to encrypted local queue
+      if (isOffline) {
+        const localId = 'off-' + Date.now();
+        offlineQueue.push({ ...payload, localId, offlineSignature: 'SIG-' + Math.random().toString(36) });
+        updatePendingBadge();
+        logConsole(`📦 Offline punch enqueued locally (${offlineQueue.length} pending).`);
+        alert('You are offline! Punch saved securely on device. It will automatically sync once connected.');
+        return;
+      }
+
+      // Online: Call Backend REST API
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/punch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        const timeStr = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
+
+        if (res.ok && data.success) {
+          // Properly capture Check-In vs Check-Out timestamp in state
+          if (punchType === 'CHECK_IN') {
+            lastCheckInTime = timeStr;
+            document.getElementById('cardPresent').innerText = '01';
+            document.getElementById('cardAbsent').innerText = '00';
+          } else if (punchType === 'CHECK_OUT') {
+            lastCheckOutTime = timeStr;
+          }
+
+          // Conditionally render updated timestamps on UI
+          renderPunchTimes();
+
+          logConsole(`✅ [200 Verified] ${data.message} (${Math.round(data.distanceFromOfficeMeters)}m from office).`);
+          alert(`Success! ${punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} verified at ${timeStr}.`);
+        } else {
+          logConsole(`❌ [403 Rejected] [${data.rejectionReason}]: ${data.message}`);
+          alert(`Punch Rejected!\nReason: ${data.rejectionReason}\n${data.message}`);
+          refreshMobileData();
+        }
+      } catch (err) {
+        logConsole(`⚠️ Network error: ${err.message}. Enqueuing locally.`);
+        offlineQueue.push({ ...payload, localId: 'off-' + Date.now() });
+        updatePendingBadge();
+      }
+    }
+
+    // Sync Offline Queue
+    async function syncOfflineQueue() {
+      if (offlineQueue.length === 0) {
+        alert('No pending offline punches to sync.');
+        return;
+      }
+
+      logConsole(`🔄 Syncing ${offlineQueue.length} offline punches to backend...`);
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/offline-sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deviceId: 'DEV-S23-ULTRA-SECURE-UUID-9042',
+            batchTimestamp: new Date().toISOString(),
+            punches: offlineQueue
+          })
+        });
+
+        const data = await res.json();
+        logConsole(`🎉 Sync complete! ${data.syncedCount} synced, ${data.rejectedCount} rejected.`);
+        offlineQueue = [];
+        updatePendingBadge();
+        refreshMobileData();
+        alert(`Offline Sync Complete!\nSynced: ${data.syncedCount}\nRejected: ${data.rejectedCount}`);
+      } catch (err) {
+        logConsole(`❌ Sync failed: ${err.message}`);
+      }
+    }
+
+    function updatePendingBadge() {
+      const badge = document.getElementById('pendingBadge');
+      if (offlineQueue.length > 0) {
+        badge.innerText = offlineQueue.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    async function loadRejectionList() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/rejections`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('rejectionBadge').innerText = data.count;
+          document.getElementById('modalRejectionBadge').innerText = data.count;
+          const container = document.getElementById('mobileRejectionsList');
+          container.innerHTML = data.rejections.map(r => `
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-rose-200">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-rose-700 text-[10px] font-mono">[${r.rejectionReason}]</span>
+                <span class="text-[10px] text-slate-400">${new Date(r.attemptedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              <div class="text-[11px] text-slate-600 mt-1">${r.details || 'Rejection logged'}</div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load rejections:', err);
+      }
+    }
+
+    // ====================================================================
+    // SCREEN NAVIGATION & ATTENDANCE SUMMARY LOGIC (Task 1)
+    // ====================================================================
+
+    function navigateToScreen(screen) {
+      currentScreen = screen;
+      closeBottomMenu();
+
+      const views = {
+        'home': document.getElementById('homeScreenView'),
+        'attendance-summary': document.getElementById('attendanceSummaryScreenView'),
+        'attendance-records': document.getElementById('attendanceRecordsScreenView'),
+        'my-roster': document.getElementById('myRosterScreenView'),
+        'location-shift-summary': document.getElementById('locationShiftScreenView'),
+        'employees-attendance-summary': document.getElementById('employeesSummaryScreenView'),
+        'employees-attendance-records': document.getElementById('employeesRecordsScreenView'),
+      };
+
+      // Hide all views, then show the requested one
+      Object.entries(views).forEach(([k, el]) => {
+        if (el) {
+          if (k === screen) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        }
+      });
+
+      // Update bottom Attendance tab active highlight
+      const navBtnAttendance = document.getElementById('navBtnAttendance');
+      if (navBtnAttendance) {
+        if (screen !== 'home') {
+          navBtnAttendance.classList.add('active-tab');
+        } else {
+          navBtnAttendance.classList.remove('active-tab');
+        }
+      }
+
+      // Update console switcher buttons
+      const consoleBtns = {
+        'home': document.getElementById('btnConsoleHome'),
+        'attendance-summary': document.getElementById('btnConsoleSummary'),
+        'attendance-records': document.getElementById('btnConsoleRecords'),
+        'my-roster': document.getElementById('btnConsoleRoster'),
+        'location-shift-summary': document.getElementById('btnConsoleLocShift'),
+        'employees-attendance-summary': document.getElementById('btnConsoleEmpSummary'),
+        'employees-attendance-records': document.getElementById('btnConsoleEmpRecords'),
+      };
+
+      const inactiveClass = 'p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold';
+      const activeClass = 'p-1.5 rounded-xl bg-teal-900/60 hover:bg-teal-900/80 text-teal-200 border border-teal-600/70 text-center flex items-center justify-center gap-1 active:scale-95 transition font-semibold';
+
+      Object.entries(consoleBtns).forEach(([k, btn]) => {
+        if (btn) {
+          if (k === screen) {
+            btn.className = (k === 'employees-attendance-records' ? 'col-span-3 ' : '') + activeClass;
+          } else {
+            btn.className = (k === 'employees-attendance-records' ? 'col-span-3 ' : '') + inactiveClass;
+          }
+        }
+      });
+
+      // Trigger screen-specific data fetchers
+      if (screen === 'attendance-summary') {
+        fetchAndRenderSummaryData();
+        logConsole('📊 Navigated to: My Attendance Summary Screen');
+      } else if (screen === 'attendance-records') {
+        fetchAndRenderRecordsData();
+        logConsole('📋 Navigated to: My Attendance Records Screen');
+      } else if (screen === 'my-roster') {
+        fetchAndRenderRosterData();
+        logConsole('📅 Navigated to: My Roster Calendar');
+      } else if (screen === 'location-shift-summary') {
+        fetchAndRenderLocShiftData();
+        logConsole('🏢 Navigated to: Location/Department/Shift Wise Summary');
+      } else if (screen === 'employees-attendance-summary') {
+        fetchAndRenderEmpSummaryData();
+        logConsole('👥 Navigated to: Employees Attendance Summary');
+      } else if (screen === 'employees-attendance-records') {
+        fetchAndRenderEmpRecordsData();
+        logConsole('📑 Navigated to: Employees Attendance Records');
+      } else {
+        logConsole('🏠 Returned to: Home Screen');
+      }
+    }
+
+    let summaryScreenState = {
+      fromDate: '26-10-2026',
+      toDate: '10-11-2026',
+      includeAbsents: true,
+      counts: {
+        present: 8,
+        offDay: 4,
+        leave: 1,
+        absent: 3,
+        total: 16
+      }
+    };
+
+    function parseDateString(s) {
+      const parts = s.split('-').map(Number);
+      if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+      return new Date(s);
+    }
+
+    function formatDateString(d) {
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    }
+
+    function shiftSummaryDate(field, deltaDays) {
+      const currentStr = field === 'from' ? summaryScreenState.fromDate : summaryScreenState.toDate;
+      const d = parseDateString(currentStr);
+      d.setDate(d.getDate() + deltaDays);
+      const newStr = formatDateString(d);
+
+      if (field === 'from') {
+        const toDate = parseDateString(summaryScreenState.toDate);
+        if (d > toDate) {
+          alert('From Date cannot be later than To Date');
+          return;
+        }
+        summaryScreenState.fromDate = newStr;
+        document.getElementById('summaryFromDateText').innerText = newStr;
+      } else {
+        const fromDate = parseDateString(summaryScreenState.fromDate);
+        if (d < fromDate) {
+          alert('To Date cannot be earlier than From Date');
+          return;
+        }
+        summaryScreenState.toDate = newStr;
+        document.getElementById('summaryToDateText').innerText = newStr;
+      }
+
+      fetchAndRenderSummaryData();
+    }
+
+    function triggerNativeDatePicker(field) {
+      const el = field === 'from' ? document.getElementById('nativeFromDate') : document.getElementById('nativeToDate');
+      if (el) {
+        if (typeof el.showPicker === 'function') {
+          el.showPicker();
+        } else {
+          el.click();
+        }
+      }
+    }
+
+    function onNativeDateSelected(field, yyyyMmDd) {
+      if (!yyyyMmDd) return;
+      const parts = yyyyMmDd.split('-');
+      if (parts.length === 3) {
+        const dStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        if (field === 'from') {
+          summaryScreenState.fromDate = dStr;
+          document.getElementById('summaryFromDateText').innerText = dStr;
+        } else {
+          summaryScreenState.toDate = dStr;
+          document.getElementById('summaryToDateText').innerText = dStr;
+        }
+        fetchAndRenderSummaryData();
+      }
+    }
+
+    function onToggleIncludeAbsents(isChecked) {
+      summaryScreenState.includeAbsents = isChecked;
+      fetchAndRenderSummaryData();
+    }
+
+    function calculateLocalAttendance(fromDateStr, toDateStr, includeAbsents) {
+      if (fromDateStr === '26-10-2026' && toDateStr === '10-11-2026') {
+        const absent = 3;
+        const leave = 1;
+        const offDay = 4;
+        const present = 8;
+        const total = present + offDay + leave + (includeAbsents ? absent : 0);
+        return { present, offDay, leave, absent, total };
+      }
+
+      const d1 = parseDateString(fromDateStr);
+      const d2 = parseDateString(toDateStr);
+      const start = d1 <= d2 ? d1 : d2;
+      const end = d1 <= d2 ? d2 : d1;
+
+      let present = 0;
+      let offDay = 0;
+      let leave = 0;
+      let absent = 0;
+
+      const curr = new Date(start);
+      while (curr <= end) {
+        const dayOfWeek = curr.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          offDay++;
+        } else {
+          const seed = (curr.getDate() * 17 + (curr.getMonth() + 1) * 31 + curr.getFullYear()) % 100;
+          if (seed < 65) {
+            present++;
+          } else if (seed < 80) {
+            leave++;
+          } else {
+            absent++;
+          }
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      const total = present + offDay + leave + (includeAbsents ? absent : 0);
+      return { present, offDay, leave, absent, total };
+    }
+
+    async function fetchAndRenderSummaryData() {
+      const from = summaryScreenState.fromDate;
+      const to = summaryScreenState.toDate;
+      const inc = summaryScreenState.includeAbsents;
+
+      let counts = null;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/summary?fromDate=${from}&toDate=${to}&includeAbsents=${inc}`);
+        if (res.ok) {
+          const data = await res.json();
+          counts = data.counts;
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, calculating locally.');
+      }
+
+      if (!counts) {
+        counts = calculateLocalAttendance(from, to, inc);
+      }
+
+      summaryScreenState.counts = counts;
+
+      // Update Card Badges
+      const bAbsent = document.getElementById('badgeAbsent');
+      const bLeave = document.getElementById('badgeLeave');
+      const bOffDay = document.getElementById('badgeOffDay');
+      const bPresent = document.getElementById('badgePresent');
+      const cardAbsent = document.getElementById('summaryCardAbsent');
+
+      if (bAbsent) bAbsent.innerText = counts.absent;
+      if (bLeave) bLeave.innerText = counts.leave;
+      if (bOffDay) bOffDay.innerText = counts.offDay;
+      if (bPresent) bPresent.innerText = counts.present;
+
+      // Match badge background to current theme
+      const currentTheme = THEMES[activeThemeKey] || THEMES.teal;
+      [bAbsent, bLeave, bOffDay, bPresent].forEach(b => {
+        if (b) b.style.backgroundColor = currentTheme.primary;
+      });
+
+      if (cardAbsent) {
+        if (!inc) {
+          cardAbsent.classList.add('opacity-50');
+          if (bAbsent) bAbsent.innerText = '0';
+        } else {
+          cardAbsent.classList.remove('opacity-50');
+        }
+      }
+
+      // Render Donut Chart
+      drawDonutChart(counts, inc);
+    }
+
+    function polarToCartesian(centerX, centerY, radius, angleInRadians) {
+      return {
+        x: centerX + (radius * Math.cos(angleInRadians)),
+        y: centerY + (radius * Math.sin(angleInRadians))
+      };
+    }
+
+    function describeDonutArc(cx, cy, innerRadius, outerRadius, startAngle, endAngle) {
+      const p1 = polarToCartesian(cx, cy, outerRadius, startAngle);
+      const p2 = polarToCartesian(cx, cy, outerRadius, endAngle);
+      const p3 = polarToCartesian(cx, cy, innerRadius, endAngle);
+      const p4 = polarToCartesian(cx, cy, innerRadius, startAngle);
+
+      const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+
+      return [
+        `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`,
+        `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`,
+        `L ${p3.x.toFixed(1)} ${p3.y.toFixed(1)}`,
+        `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${p4.x.toFixed(1)} ${p4.y.toFixed(1)}`,
+        'Z'
+      ].join(' ');
+    }
+
+    function drawDonutChart(counts, includeAbsents) {
+      const svg = document.getElementById('attendanceDonutChart');
+      if (!svg) return;
+
+      const items = [];
+      if (includeAbsents && counts.absent > 0) {
+        items.push({ key: 'absent', label: 'Absent', value: counts.absent, color: '#ea6c00' });
+      }
+      if (counts.leave > 0) {
+        items.push({ key: 'leave', label: 'Leave', value: counts.leave, color: '#9d6c8b' });
+      }
+      if (counts.offDay > 0) {
+        items.push({ key: 'offDay', label: 'Off Day', value: counts.offDay, color: '#0d3159' });
+      }
+      if (counts.present > 0) {
+        items.push({ key: 'present', label: 'Present', value: counts.present, color: '#0a4a27' });
+      }
+
+      const total = items.reduce((sum, it) => sum + it.value, 0);
+      const cx = 160;
+      const cy = 115;
+      const R = 76;
+      const r = 46;
+
+      if (total === 0) {
+        svg.innerHTML = `
+          <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="26" />
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffffff" />
+          <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">No Records</text>
+        `;
+        return;
+      }
+
+      let currentAngle = -Math.PI / 2; // start at 12 o'clock
+      let elements = [];
+
+      items.forEach((item) => {
+        const sliceAngle = (item.value / total) * (2 * Math.PI);
+        const startA = currentAngle;
+        const endA = currentAngle + sliceAngle;
+        const midA = startA + (sliceAngle / 2);
+        currentAngle = endA;
+
+        // Donut slice path
+        const d = describeDonutArc(cx, cy, r, R, startA, endA);
+        elements.push(`<path d="${d}" fill="${item.color}" stroke="#ffffff" stroke-width="1.5" />`);
+
+        // Callout lines and labels
+        const arcP = polarToCartesian(cx, cy, R + 3, midA);
+        const isRight = Math.cos(midA) >= 0;
+        
+        let kneeDist = 22;
+        let kneeX = cx + (R + kneeDist) * Math.cos(midA);
+        let kneeY = cy + (R + kneeDist) * Math.sin(midA);
+
+        if (kneeY < 24) kneeY = 24;
+        if (kneeY > 210) kneeY = 210;
+
+        const lineEndX = isRight ? (kneeX + 16) : (kneeX - 16);
+        const textX = isRight ? (lineEndX + 4) : (lineEndX - 4);
+        const anchor = isRight ? 'start' : 'end';
+
+        elements.push(`
+          <polyline points="${arcP.x.toFixed(1)},${arcP.y.toFixed(1)} ${kneeX.toFixed(1)},${kneeY.toFixed(1)} ${lineEndX.toFixed(1)},${kneeY.toFixed(1)}"
+            fill="none" stroke="#64748b" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+          <text x="${textX.toFixed(1)}" y="${(kneeY + 3.5).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="600" fill="#334155">
+            ${item.label}: ${item.value}
+          </text>
+        `);
+      });
+
+      // Center hole & total count
+      elements.push(`
+        <circle cx="${cx}" cy="${cy}" r="${r - 1}" fill="#ffffff" stroke="#f1f5f9" stroke-width="1.5" />
+        <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">
+          Total: ${total}
+        </text>
+      `);
+
+      svg.innerHTML = elements.join('\n');
+    }
+
+    // ====================================================================
+    // ATTENDANCE DETAILED RECORDS LOGIC (Task 2 - Grid & Hours Summary)
+    // ====================================================================
+
+    let recordsScreenState = {
+      fromDate: '26-10-2026',
+      toDate: '10-11-2026',
+      onlyMissings: false,
+      includeAbsents: true,
+      summary: {
+        requiredHours: 108.00,
+        presentHours: 29.94,
+        hoursDifference: -78.06,
+        totalDays: 16,
+        workingDays: 12
+      },
+      records: []
+    };
+
+    function shiftRecordsDate(field, deltaDays) {
+      const currentStr = field === 'from' ? recordsScreenState.fromDate : recordsScreenState.toDate;
+      const d = parseDateString(currentStr);
+      d.setDate(d.getDate() + deltaDays);
+      const newStr = formatDateString(d);
+
+      if (field === 'from') {
+        recordsScreenState.fromDate = newStr;
+      } else {
+        recordsScreenState.toDate = newStr;
+      }
+
+      const fromEl = document.getElementById('recordsFromDateText');
+      const toEl = document.getElementById('recordsToDateText');
+      if (fromEl) fromEl.innerText = recordsScreenState.fromDate;
+      if (toEl) toEl.innerText = recordsScreenState.toDate;
+
+      fetchAndRenderRecordsData();
+    }
+
+    function triggerNativeRecordsDatePicker(field) {
+      const input = document.getElementById(field === 'from' ? 'nativeRecordsFromDate' : 'nativeRecordsToDate');
+      if (!input) return;
+      const currentStr = field === 'from' ? recordsScreenState.fromDate : recordsScreenState.toDate;
+      const d = parseDateString(currentStr);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      input.value = `${yyyy}-${mm}-${dd}`;
+      if (typeof input.showPicker === 'function') {
+        input.showPicker();
+      } else {
+        input.click();
+      }
+    }
+
+    function onNativeRecordsDateSelected(field, val) {
+      if (!val) return;
+      const parts = val.split('-');
+      if (parts.length !== 3) return;
+      const newStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+      if (field === 'from') {
+        recordsScreenState.fromDate = newStr;
+      } else {
+        recordsScreenState.toDate = newStr;
+      }
+
+      const fromEl = document.getElementById('recordsFromDateText');
+      const toEl = document.getElementById('recordsToDateText');
+      if (fromEl) fromEl.innerText = recordsScreenState.fromDate;
+      if (toEl) toEl.innerText = recordsScreenState.toDate;
+
+      fetchAndRenderRecordsData();
+    }
+
+    function onToggleRecordsFilters() {
+      const chkMissings = document.getElementById('chkOnlyMissings');
+      const chkAbsents = document.getElementById('chkRecordsIncludeAbsents');
+      recordsScreenState.onlyMissings = chkMissings ? chkMissings.checked : false;
+      recordsScreenState.includeAbsents = chkAbsents ? chkAbsents.checked : true;
+      fetchAndRenderRecordsData();
+    }
+
+    function formatCellTime(timeStr) {
+      if (!timeStr) return '';
+      const parts = timeStr.trim().split(' ');
+      if (parts.length === 2) {
+        return `<div class="leading-tight font-medium text-[11px]">${parts[0]}<div class="text-[9px] font-normal opacity-75">${parts[1]}</div></div>`;
+      }
+      return timeStr;
+    }
+
+    async function fetchAndRenderRecordsData() {
+      const from = recordsScreenState.fromDate;
+      const to = recordsScreenState.toDate;
+      const onlyMissings = recordsScreenState.onlyMissings;
+      const includeAbsents = recordsScreenState.includeAbsents;
+
+      // Update date picker labels in UI
+      const fromEl = document.getElementById('recordsFromDateText');
+      const toEl = document.getElementById('recordsToDateText');
+      if (fromEl) fromEl.innerText = from;
+      if (toEl) toEl.innerText = to;
+
+      let summaryData = null;
+      let recordsData = null;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/records?fromDate=${from}&toDate=${to}&onlyMissings=${onlyMissings}&includeAbsents=${includeAbsents}`);
+        if (res.ok) {
+          const data = await res.json();
+          summaryData = data.summary;
+          recordsData = data.records;
+        }
+      } catch (err) {
+        console.warn('Backend unavailable for attendance records, calculating locally.');
+      }
+
+      if (!summaryData || !recordsData) {
+        const local = calculateLocalRecords(from, to, onlyMissings, includeAbsents);
+        summaryData = local.summary;
+        recordsData = local.records;
+      }
+
+      recordsScreenState.summary = summaryData;
+      recordsScreenState.records = recordsData;
+
+      renderAttendanceRecordsUI();
+    }
+
+    function calculateLocalRecords(fromStr, toStr, onlyMissings, includeAbsents) {
+      const CANONICAL = [
+        { date: 'Tue 10-11-2026', rawDate: '2026-11-10', inTime: '10:42 AM', outTime: undefined, missing: 'Y', status: 'Present', presentHours: 0 },
+        { date: 'Mon 09-11-2026', rawDate: '2026-11-09', inTime: undefined, outTime: undefined, missing: '', status: 'Absent', presentHours: 0 },
+        { date: 'Sun 08-11-2026', rawDate: '2026-11-08', inTime: undefined, outTime: undefined, missing: '', status: 'Off Day', presentHours: null },
+        { date: 'Sat 07-11-2026', rawDate: '2026-11-07', inTime: undefined, outTime: undefined, missing: '', status: 'Off Day', presentHours: null },
+        { date: 'Fri 06-11-2026', rawDate: '2026-11-06', inTime: '09:54 AM', outTime: '05:49 PM', missing: '', status: 'Present', presentHours: 7.92 },
+        { date: 'Thu 05-11-2026', rawDate: '2026-11-05', inTime: undefined, outTime: '05:17 PM', missing: 'Y', status: 'Present', presentHours: 0 },
+        { date: 'Wed 04-11-2026', rawDate: '2026-11-04', inTime: '10:18 AM', outTime: '05:34 PM', missing: '', status: 'Present', presentHours: 7.27 },
+        { date: 'Tue 03-11-2026', rawDate: '2026-11-03', inTime: undefined, outTime: undefined, missing: '', status: 'Absent', presentHours: 0 },
+        { date: 'Mon 02-11-2026', rawDate: '2026-11-02', inTime: '12:03 PM', outTime: undefined, missing: 'Y', status: 'Present', presentHours: 0 },
+        { date: 'Sun 01-11-2026', rawDate: '2026-11-01', inTime: undefined, outTime: undefined, missing: '', status: 'Off Day', presentHours: null },
+        { date: 'Sat 31-10-2026', rawDate: '2026-10-31', inTime: undefined, outTime: undefined, missing: '', status: 'Off Day', presentHours: null },
+        { date: 'Fri 30-10-2026', rawDate: '2026-10-30', inTime: undefined, outTime: '05:19 PM', missing: 'Y', status: 'Present', presentHours: 0 },
+        { date: 'Thu 29-10-2026', rawDate: '2026-10-29', inTime: '11:16 AM', outTime: '05:01 PM', missing: '', status: 'Present', presentHours: 5.75 },
+        { date: 'Wed 28-10-2026', rawDate: '2026-10-28', inTime: undefined, outTime: undefined, missing: '', status: 'Absent', presentHours: 0 },
+        { date: 'Tue 27-10-2026', rawDate: '2026-10-27', inTime: '10:23 AM', outTime: undefined, missing: 'Y', status: 'Present', presentHours: 0 },
+        { date: 'Mon 26-10-2026', rawDate: '2026-10-26', inTime: undefined, outTime: undefined, missing: '', status: 'Leave', presentHours: 9 },
+      ];
+
+      let allRecords = CANONICAL.map(r => ({ ...r }));
+      if (lastCheckOutTime && lastCheckInTime) {
+        const todayRec = allRecords.find(r => r.rawDate === '2026-11-10');
+        if (todayRec) {
+          todayRec.outTime = lastCheckOutTime;
+          todayRec.missing = '';
+          todayRec.presentHours = 7.12;
+        }
+      }
+
+      const totalDays = allRecords.length;
+      const workingDays = allRecords.filter(r => r.status !== 'Off Day').length;
+      const requiredHours = Number((workingDays * 9.00).toFixed(2));
+      const presentHours = Number(allRecords.reduce((sum, r) => sum + (r.presentHours || 0), 0).toFixed(2));
+      const hoursDifference = Number((presentHours - requiredHours).toFixed(2));
+
+      let filtered = allRecords;
+      if (!includeAbsents) {
+        filtered = filtered.filter(r => r.status !== 'Absent');
+      }
+      if (onlyMissings) {
+        filtered = filtered.filter(r => r.missing === 'Y');
+      }
+
+      return {
+        summary: { requiredHours, presentHours, hoursDifference, totalDays, workingDays },
+        records: filtered
+      };
+    }
+
+    function renderAttendanceRecordsUI() {
+      const summary = recordsScreenState.summary;
+      const records = recordsScreenState.records;
+
+      // Update Hours Summary Card
+      const reqEl = document.getElementById('lblRequiredHours');
+      const presEl = document.getElementById('lblPresentHours');
+      const diffEl = document.getElementById('lblHoursDifference');
+
+      if (reqEl) reqEl.innerText = summary.requiredHours.toFixed(2);
+      if (presEl) presEl.innerText = summary.presentHours.toFixed(2);
+      if (diffEl) {
+        const diffVal = summary.hoursDifference;
+        diffEl.innerText = (diffVal > 0 ? '+' : '') + diffVal.toFixed(2);
+        if (diffVal < 0) {
+          diffEl.className = 'text-xs sm:text-sm font-bold text-[#dc2626] mt-1';
+        } else {
+          diffEl.className = 'text-xs sm:text-sm font-bold text-[#16a34a] mt-1';
+        }
+      }
+
+      // Render Table Rows
+      const tbody = document.getElementById('attendanceRecordsTableBody');
+      if (!tbody) return;
+
+      if (!records || records.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-8 px-4 text-center text-slate-400 italic text-xs">
+              No attendance records found matching filters.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = records.map((rec, idx) => {
+        let statusColorClass = 'text-slate-800';
+        if (rec.status === 'Absent' || (rec.status === 'Present' && rec.missing === 'Y')) {
+          statusColorClass = 'text-[#b85d5d]';
+        } else if (rec.status === 'Off Day') {
+          statusColorClass = 'text-[#7a8288]';
+        } else {
+          statusColorClass = 'text-slate-800';
+        }
+
+        const missingHtml = rec.missing === 'Y'
+          ? `<span class="font-bold text-[#dc2626]">Y</span>`
+          : '';
+
+        const presentHoursText = (rec.presentHours !== null && rec.presentHours !== undefined)
+          ? rec.presentHours
+          : '';
+
+        const bgClass = idx % 2 === 1 ? 'bg-slate-50/40' : 'bg-white';
+
+        return `
+          <tr class="${statusColorClass} ${bgClass} hover:bg-teal-50/30 transition text-center">
+            <td class="py-2.5 px-2 text-center border-r border-slate-200 whitespace-nowrap font-medium text-[11px]">${rec.date}</td>
+            <td class="py-2 px-1 text-center border-r border-slate-200 whitespace-nowrap">${formatCellTime(rec.inTime)}</td>
+            <td class="py-2 px-1 text-center border-r border-slate-200 whitespace-nowrap">${formatCellTime(rec.outTime)}</td>
+            <td class="py-2 px-1 text-center border-r border-slate-200 whitespace-nowrap">${missingHtml}</td>
+            <td class="py-2 px-1.5 text-center border-r border-slate-200 whitespace-nowrap font-medium text-[11px]">${rec.status}</td>
+            <td class="py-2.5 px-2 text-center whitespace-nowrap font-semibold text-[11px]">${presentHoursText}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ====================================================================
+    // PAYROLL SALARY SLIP DOWNLOAD HANDLER (Task 3 Fix)
+    // ====================================================================
+
+    function triggerBlobDownload(blob, filename) {
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', filename);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 300);
+    }
+
+    async function downloadSalarySlipPdf(month = 'October 2026') {
+      const btn = document.getElementById('btnDownloadSalarySlip');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-emerald-400"></i> Preparing PDF...';
+      }
+
+      try {
+        logConsole('📥 Fetching official Salary Slip PDF from backend API...');
+        const encoded = encodeURIComponent(month);
+        const res = await fetch(`${API_BASE}/api/v1/payroll/salary-slip?month=${encoded}`);
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
+        }
+        const blob = await res.blob();
+        triggerBlobDownload(blob, `Salary_Slip_October_2026_AK-8924.pdf`);
+        logConsole('✅ Salary slip downloaded successfully (PDF binary stream)!');
+      } catch (err) {
+        console.warn('Backend download error, using client-side generator:', err);
+        logConsole(`⚠️ Network note: ${err.message}. Generating client backup PDF.`);
+        generateClientPayslipPdf('Salary_Slip_October_2026_AK-8924.pdf');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }
+      }
+    }
+
+    function generateClientPayslipPdf(filename) {
+      const text = [
+        '%PDF-1.4',
+        '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+        '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+        '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+        '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Courier >> endobj',
+        '5 0 obj << /Length 650 >> stream',
+        'BT /F1 10 Tf 50 740 Td 14 TL',
+        '(==================================================) \'',
+        '(         ALS - EMPLOYEE SALARY PAYSLIP            ) \'',
+        '(==================================================) \'',
+        '(Employee:    Sajjad Ali [AK-8924]                 ) \'',
+        '(Designation: Senior Product Designer              ) \'',
+        '(Period:      October 2026                         ) \'',
+        '(Currency:    PKR (Pakistani Rupees)               ) \'',
+        '(--------------------------------------------------) \'',
+        '(Basic Salary:             PKR 320,000             ) \'',
+        '(House Rent Allowance:     PKR  85,000             ) \'',
+        '(Conveyance Allowance:     PKR  35,000             ) \'',
+        '(Tax Deductions:          -PKR  15,000             ) \'',
+        '(==================================================) \'',
+        '(NET PAYABLE AMOUNT:       PKR 425,000             ) \'',
+        '(==================================================) \'',
+        '(Status: PAID & VERIFIED BY ALS PAYROLL) \'',
+        'ET endstream endobj',
+        'xref 0 6',
+        '0000000000 65535 f ',
+        '0000000009 00000 n ',
+        '0000000058 00000 n ',
+        '0000000115 00000 n ',
+        '0000000236 00000 n ',
+        '0000000299 00000 n ',
+        'trailer << /Size 6 /Root 1 0 R >> startxref 980 %%EOF'
+      ].join('\n');
+      const blob = new Blob([text], { type: 'application/pdf' });
+      triggerBlobDownload(blob, filename);
+    }
+
+    // ====================================================================
+    // MY ROSTER SCREEN LOGIC (Screenshot 1)
+    // ====================================================================
+
+    let rosterState = {
+      month: 'November 2026',
+      selectedDate: '10-11-2026',
+      selectedDay: 10,
+      days: []
+    };
+
+    function shiftRosterMonth(delta) {
+      logConsole(delta > 0 ? '📅 Switched to next month roster' : '📅 Switched to previous month roster');
+      fetchAndRenderRosterData();
+    }
+
+    async function fetchAndRenderRosterData() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/roster?month=${encodeURIComponent(rosterState.month)}`);
+        if (res.ok) {
+          const data = await res.json();
+          rosterState.days = data.days;
+        } else {
+          fallbackCalculateRoster();
+        }
+      } catch {
+        fallbackCalculateRoster();
+      }
+      renderRosterCalendar();
+    }
+
+    function fallbackCalculateRoster() {
+      const days = [];
+      for (let d = 1; d <= 30; d++) {
+        const dateObj = new Date(2026, 10, d);
+        const dayOfWeek = dateObj.getDay();
+        const isOffDay = dayOfWeek === 0 || dayOfWeek === 6;
+        days.push({
+          dayOfMonth: d,
+          dayOfWeek,
+          date: `${String(d).padStart(2, '0')}-11-2026`,
+          isOffDay,
+          shiftName: isOffDay ? 'OFF Days' : 'General(09:00-18:00)',
+          shiftTiming: isOffDay ? 'OFF' : '09:00 - 18:00'
+        });
+      }
+      rosterState.days = days;
+    }
+
+    function selectRosterDay(dayNum) {
+      rosterState.selectedDay = dayNum;
+      rosterState.selectedDate = `${String(dayNum).padStart(2, '0')}-11-2026`;
+      renderRosterCalendar();
+    }
+
+    function renderRosterCalendar() {
+      const grid = document.getElementById('rosterDaysGrid');
+      if (!grid) return;
+
+      if (!rosterState.days || rosterState.days.length === 0) {
+        fallbackCalculateRoster();
+      }
+
+      let html = '';
+      rosterState.days.forEach(d => {
+        const isSelected = d.dayOfMonth === rosterState.selectedDay;
+        const bgStyle = d.isOffDay 
+          ? 'bg-[#80f0ff] text-slate-800 border-cyan-300' 
+          : 'bg-[#b8acc4] text-slate-800 border-purple-300';
+        
+        const ringClass = isSelected 
+          ? 'border-2 border-theme-primary font-bold shadow-md scale-105' 
+          : 'border border-transparent font-medium';
+
+        html += `
+          <button onclick="selectRosterDay(${d.dayOfMonth})" class="h-10 sm:h-11 rounded-xl flex items-center justify-center text-xs sm:text-sm ${bgStyle} ${ringClass} transition active:scale-95 select-none" title="${d.date} - ${d.shiftName}">
+            <span class="${isSelected ? 'w-7 h-7 rounded-full border-2 border-theme-primary flex items-center justify-center font-bold text-slate-900' : ''}">${d.dayOfMonth}</span>
+          </button>
+        `;
+      });
+
+      // Add trailing empty/next month days (1..5) as faded
+      for (let extra = 1; extra <= 5; extra++) {
+        html += `
+          <div class="h-10 sm:h-11 rounded-xl flex items-center justify-center text-xs sm:text-sm text-slate-300 font-normal bg-transparent select-none">
+            ${extra}
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+
+      // Update selected day detail card
+      const cur = rosterState.days.find(d => d.dayOfMonth === rosterState.selectedDay) || rosterState.days[9];
+      const titleEl = document.getElementById('lblRosterShiftTitle');
+      const timingEl = document.getElementById('lblRosterShiftTiming');
+      const subEl = document.getElementById('lblRosterDateSubtitle');
+
+      if (titleEl) titleEl.innerText = cur.isOffDay ? 'OFF Day' : cur.shiftName;
+      if (timingEl) {
+        timingEl.innerText = cur.isOffDay ? 'Weekly Off' : cur.shiftTiming;
+        timingEl.className = cur.isOffDay 
+          ? 'text-[10px] px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 font-semibold'
+          : 'text-[10px] px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-semibold';
+      }
+      if (subEl) subEl.innerText = cur.date;
+    }
+
+    // ====================================================================
+    // LOCATION/DEPARTMENT/SHIFT SUMMARY LOGIC (Screenshot 2)
+    // ====================================================================
+
+    let locShiftState = {
+      date: '10-11-2026',
+      employeeStatus: 'Continue',
+      includeAbsents: true,
+      data: {
+        branch: 'Regional Office LHR',
+        department: 'Technology',
+        shift: 'General Shift',
+        presentCount: 1
+      }
+    };
+
+    function shiftLocShiftDate(deltaDays) {
+      const d = parseDateString(locShiftState.date);
+      d.setDate(d.getDate() + deltaDays);
+      locShiftState.date = formatDateString(d);
+      const lbl = document.getElementById('lblLocShiftDate');
+      if (lbl) lbl.innerText = locShiftState.date;
+      fetchAndRenderLocShiftData();
+    }
+
+    function triggerNativeLocShiftDatePicker() {
+      const inp = document.getElementById('nativeLocShiftDate');
+      if (inp) {
+        const d = parseDateString(locShiftState.date);
+        inp.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        inp.showPicker ? inp.showPicker() : inp.click();
+      }
+    }
+
+    function onNativeLocShiftDateSelected(val) {
+      if (!val) return;
+      const parts = val.split('-');
+      locShiftState.date = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      const lbl = document.getElementById('lblLocShiftDate');
+      if (lbl) lbl.innerText = locShiftState.date;
+      fetchAndRenderLocShiftData();
+    }
+
+    async function fetchAndRenderLocShiftData() {
+      const sel = document.getElementById('selLocShiftEmpStatus');
+      const chk = document.getElementById('chkLocShiftIncludeAbsents');
+      if (sel) locShiftState.employeeStatus = sel.value;
+      if (chk) locShiftState.includeAbsents = chk.checked;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/location-shift-summary?date=${locShiftState.date}&employeeStatus=${locShiftState.employeeStatus}&includeAbsents=${locShiftState.includeAbsents}`);
+        if (res.ok) {
+          locShiftState.data = await res.json();
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, using default locShift data');
+      }
+
+      const bar = document.getElementById('locShiftBar');
+      if (bar) {
+        const count = locShiftState.data.presentCount || 1;
+        bar.style.height = `${count * 85}%`;
+        bar.title = `Present: ${count}`;
+      }
+    }
+
+    // ====================================================================
+    // EMPLOYEES ATTENDANCE SUMMARY LOGIC (Screenshot 3)
+    // ====================================================================
+
+    let empSummaryState = {
+      fromDate: '26-10-2026',
+      toDate: '10-11-2026',
+      employeeStatus: 'Continue',
+      includeAbsents: false,
+      rows: [
+        { serialNo: 1, employeeName: 'Sajjad Ali', count: 3, status: 'Present', isSpecialStatus: false },
+        { serialNo: 2, employeeName: 'Sajjad Ali', count: 5, status: 'Present', isSpecialStatus: true },
+      ]
+    };
+
+    function shiftEmpSummaryDate(field, deltaDays) {
+      const current = field === 'from' ? empSummaryState.fromDate : empSummaryState.toDate;
+      const d = parseDateString(current);
+      d.setDate(d.getDate() + deltaDays);
+      const newStr = formatDateString(d);
+      if (field === 'from') {
+        empSummaryState.fromDate = newStr;
+        const lbl = document.getElementById('lblEmpSummaryFromDate');
+        if (lbl) lbl.innerText = newStr;
+      } else {
+        empSummaryState.toDate = newStr;
+        const lbl = document.getElementById('lblEmpSummaryToDate');
+        if (lbl) lbl.innerText = newStr;
+      }
+      fetchAndRenderEmpSummaryData();
+    }
+
+    function triggerNativeEmpSummaryDatePicker(field) {
+      const inp = document.getElementById(field === 'from' ? 'nativeEmpSummaryFromDate' : 'nativeEmpSummaryToDate');
+      if (inp) {
+        const d = parseDateString(field === 'from' ? empSummaryState.fromDate : empSummaryState.toDate);
+        inp.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        inp.showPicker ? inp.showPicker() : inp.click();
+      }
+    }
+
+    function onNativeEmpSummaryDateSelected(field, val) {
+      if (!val) return;
+      const parts = val.split('-');
+      const str = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      if (field === 'from') {
+        empSummaryState.fromDate = str;
+        const lbl = document.getElementById('lblEmpSummaryFromDate');
+        if (lbl) lbl.innerText = str;
+      } else {
+        empSummaryState.toDate = str;
+        const lbl = document.getElementById('lblEmpSummaryToDate');
+        if (lbl) lbl.innerText = str;
+      }
+      fetchAndRenderEmpSummaryData();
+    }
+
+    async function fetchAndRenderEmpSummaryData() {
+      const sel = document.getElementById('selEmpSummaryStatus');
+      const chk = document.getElementById('chkEmpSummaryIncludeAbsents');
+      if (sel) empSummaryState.employeeStatus = sel.value;
+      if (chk) empSummaryState.includeAbsents = chk.checked;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/employees-summary?fromDate=${empSummaryState.fromDate}&toDate=${empSummaryState.toDate}&employeeStatus=${empSummaryState.employeeStatus}&includeAbsents=${empSummaryState.includeAbsents}`);
+        if (res.ok) {
+          const data = await res.json();
+          empSummaryState.rows = data.rows;
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, using default empSummary data');
+      }
+
+      const tbody = document.getElementById('empSummaryTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = empSummaryState.rows.map(r => {
+        const textClass = r.isSpecialStatus ? 'text-[#c05656]' : 'text-slate-800';
+        return `
+          <tr class="${textClass} hover:bg-teal-50/20 transition text-center font-normal">
+            <td class="py-2.5 px-2 text-center border-r border-slate-200 font-medium">${r.serialNo}</td>
+            <td class="py-2.5 px-3 text-center border-r border-slate-200 font-medium">${r.employeeName}</td>
+            <td class="py-2.5 px-2 text-center border-r border-slate-200 font-bold">${r.count}</td>
+            <td class="py-2.5 px-2 text-center font-medium">${r.status}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ====================================================================
+    // EMPLOYEES ATTENDANCE RECORDS LOGIC (Screenshot 4)
+    // ====================================================================
+
+    let empRecordsState = {
+      fromDate: '10-11-2026',
+      toDate: '10-11-2026',
+      employeeStatus: 'Continue',
+      onlyMissings: false,
+      includeAbsents: false,
+      viewMode: 'date',
+      groups: [
+        {
+          dateHeader: 'Tue 10-11-2026',
+          records: [
+            { employee: 'Sajjad Ali', inTime: '10:42 AM', outTime: '', missing: 'Y', status: 'Present' }
+          ]
+        }
+      ]
+    };
+
+    function shiftEmpRecordsDate(field, deltaDays) {
+      const current = field === 'from' ? empRecordsState.fromDate : empRecordsState.toDate;
+      const d = parseDateString(current);
+      d.setDate(d.getDate() + deltaDays);
+      const newStr = formatDateString(d);
+      if (field === 'from') {
+        empRecordsState.fromDate = newStr;
+        const lbl = document.getElementById('lblEmpRecordsFromDate');
+        if (lbl) lbl.innerText = newStr;
+      } else {
+        empRecordsState.toDate = newStr;
+        const lbl = document.getElementById('lblEmpRecordsToDate');
+        if (lbl) lbl.innerText = newStr;
+      }
+      fetchAndRenderEmpRecordsData();
+    }
+
+    function triggerNativeEmpRecordsDatePicker(field) {
+      const inp = document.getElementById(field === 'from' ? 'nativeEmpRecordsFromDate' : 'nativeEmpRecordsToDate');
+      if (inp) {
+        const d = parseDateString(field === 'from' ? empRecordsState.fromDate : empRecordsState.toDate);
+        inp.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        inp.showPicker ? inp.showPicker() : inp.click();
+      }
+    }
+
+    function onNativeEmpRecordsDateSelected(field, val) {
+      if (!val) return;
+      const parts = val.split('-');
+      const str = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      if (field === 'from') {
+        empRecordsState.fromDate = str;
+        const lbl = document.getElementById('lblEmpRecordsFromDate');
+        if (lbl) lbl.innerText = str;
+      } else {
+        empRecordsState.toDate = str;
+        const lbl = document.getElementById('lblEmpRecordsToDate');
+        if (lbl) lbl.innerText = str;
+      }
+      fetchAndRenderEmpRecordsData();
+    }
+
+    async function fetchAndRenderEmpRecordsData() {
+      const sel = document.getElementById('selEmpRecordsStatus');
+      const chkMis = document.getElementById('chkEmpRecordsOnlyMissings');
+      const chkAbs = document.getElementById('chkEmpRecordsIncludeAbsents');
+      const radMode = document.querySelector('input[name="empRecordsViewMode"]:checked');
+
+      if (sel) empRecordsState.employeeStatus = sel.value;
+      if (chkMis) empRecordsState.onlyMissings = chkMis.checked;
+      if (chkAbs) empRecordsState.includeAbsents = chkAbs.checked;
+      if (radMode) empRecordsState.viewMode = radMode.value;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/employees-records?fromDate=${empRecordsState.fromDate}&toDate=${empRecordsState.toDate}&employeeStatus=${empRecordsState.employeeStatus}&onlyMissings=${empRecordsState.onlyMissings}&includeAbsents=${empRecordsState.includeAbsents}&viewMode=${empRecordsState.viewMode}`);
+        if (res.ok) {
+          const data = await res.json();
+          empRecordsState.groups = data.groups;
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, using default empRecords');
+      }
+
+      renderEmpRecordsUI();
+    }
+
+    function renderEmpRecordsUI() {
+      const container = document.getElementById('empRecordsContainer');
+      if (!container) return;
+
+      if (!empRecordsState.groups || empRecordsState.groups.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-xl p-6 text-center text-slate-400 italic text-xs border border-slate-200">
+            No employee attendance records found matching filters.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = empRecordsState.groups.map(group => `
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Date Group Header (Teal banner matching Screenshot 4) -->
+          <div class="bg-theme-primary text-white text-center py-2 px-3 font-semibold text-xs sm:text-sm tracking-wide">
+            ${group.dateHeader}
+          </div>
+          <!-- Table -->
+          <table class="w-full border-collapse text-left text-xs">
+            <thead>
+              <tr class="bg-slate-200/80 border-b border-slate-300 text-slate-700 font-semibold text-[11px]">
+                <th class="py-2 px-2 text-center border-r border-slate-300">Emp</th>
+                <th class="py-2 px-2 text-center border-r border-slate-300">In</th>
+                <th class="py-2 px-2 text-center border-r border-slate-300">Out</th>
+                <th class="py-2 px-1 text-center border-r border-slate-300 w-14">Missing</th>
+                <th class="py-2 px-2 text-center w-20">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              ${group.records.map(r => {
+                const isSpecial = r.missing === 'Y' || r.status === 'Absent';
+                const rowColor = isSpecial ? 'text-[#c05656]' : 'text-slate-800';
+                return `
+                  <tr class="${rowColor} hover:bg-teal-50/20 transition text-center font-normal">
+                    <td class="py-2.5 px-2 text-center border-r border-slate-200 font-medium">${r.employee}</td>
+                    <td class="py-2.5 px-2 text-center border-r border-slate-200">${r.inTime || ''}</td>
+                    <td class="py-2.5 px-2 text-center border-r border-slate-200">${r.outTime || ''}</td>
+                    <td class="py-2.5 px-1 text-center border-r border-slate-200 font-bold text-[#dc2626]">${r.missing || ''}</td>
+                    <td class="py-2.5 px-2 text-center font-medium">${r.status}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('');
+    }
+
+    async function downloadEmpRecordsPdf() {
+      try {
+        logConsole('📄 Generating Employees Attendance Records PDF...');
+        const allRecords = [];
+        empRecordsState.groups.forEach(g => {
+          g.records.forEach(r => {
+            allRecords.push({ date: g.dateHeader, ...r });
+          });
+        });
+
+        const res = await fetch(`${API_BASE}/api/v1/payroll/records-pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: allRecords, title: 'Employees Attendance Records' })
+        });
+
+        if (res.ok) {
+          const blob = await res.blob();
+          triggerBlobDownload(blob, 'Employees_Attendance_Records.pdf');
+          logConsole('✅ Attendance Records PDF exported successfully!');
+        } else {
+          throw new Error('PDF export failed');
+        }
+      } catch (err) {
+        logConsole(`⚠️ Error: ${err.message}. Generating client backup PDF.`);
+        generateClientEmpRecordsPdf();
+      }
+    }
+
+    function generateClientEmpRecordsPdf() {
+      const text = [
+        '%PDF-1.4',
+        '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+        '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+        '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+        '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Courier >> endobj',
+        '5 0 obj << /Length 500 >> stream',
+        'BT /F1 10 Tf 50 740 Td 14 TL',
+        '(==================================================) \'',
+        '(         ALS - EMPLOYEES ATTENDANCE RECORDS       ) \'',
+        '(==================================================) \'',
+        '(Tue 10-11-2026: Sajjad Ali | 10:42 AM | Missing: Y) \'',
+        '(Status: Present                                   ) \'',
+        '(==================================================) \'',
+        'ET endstream endobj',
+        'xref 0 6',
+        '0000000000 65535 f ',
+        '0000000009 00000 n ',
+        '0000000058 00000 n ',
+        '0000000115 00000 n ',
+        '0000000236 00000 n ',
+        '0000000299 00000 n ',
+        'trailer << /Size 6 /Root 1 0 R >> startxref 700 %%EOF'
+      ].join('\n');
+      const blob = new Blob([text], { type: 'application/pdf' });
+      triggerBlobDownload(blob, 'Employees_Attendance_Records.pdf');
+    }
+
+    async function refreshMobileData() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/attendance/summary`);
+        if (res.ok) {
+          const summary = await res.json();
+          document.getElementById('rejectionBadge').innerText = summary.rejectionCount;
+          document.getElementById('modalRejectionBadge').innerText = summary.rejectionCount;
+          if (summary.fullName) {
+            const nameEl = document.getElementById('profileNameDisplay');
+            if (nameEl) nameEl.innerText = summary.fullName;
+          }
+          if (summary.jobTitle) {
+            const titleEl = document.getElementById('profileTitleDisplay');
+            if (titleEl) titleEl.innerText = summary.jobTitle;
+          }
+          if (summary.employeeCode) {
+            const idEl = document.getElementById('profileIdDisplay');
+            if (idEl) idEl.innerText = `ID: ${summary.employeeCode}`;
+          }
+          if (summary.lastCheckInTime) {
+            lastCheckInTime = summary.lastCheckInTime;
+          }
+          if (summary.lastCheckOutTime) {
+            lastCheckOutTime = summary.lastCheckOutTime;
+          }
+          renderPunchTimes();
+        }
+      } catch (err) {
+        console.error('Data refresh error:', err);
+      }
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Restore persisted theme
+      const savedThemeRaw = localStorage.getItem('als_theme') || localStorage.getItem('smartess_theme');
+      if (savedThemeRaw) {
+        try {
+          const parsed = JSON.parse(savedThemeRaw);
+          if (parsed.theme) {
+            setAppThemeObject(parsed.theme, parsed.key || 'custom');
+          } else {
+            setAppTheme(savedThemeRaw);
+          }
+        } catch {
+          setAppTheme(savedThemeRaw);
+        }
+      } else {
+        setAppTheme('teal');
+      }
+
+      renderCuratedThemes();
+      renderPunchTimes();
+      refreshMobileData();
+      fetchAndRenderSummaryData();
+      fetchAndRenderRecordsData();
+      fetchAndRenderRosterData();
+      fetchAndRenderLocShiftData();
+      fetchAndRenderEmpSummaryData();
+      fetchAndRenderEmpRecordsData();
+    });
+  </script>
+</body>
+</html>
