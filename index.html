@@ -639,8 +639,7 @@
           <!-- Top Bar with Sub-view Tabs -->
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="text-base font-bold text-slate-800">Leave Management & Regional Distribution</h3>
-              <p class="text-xs text-slate-500">Review time-off requests and monitor employee distribution by branch location</p>
+              <h3 class="text-base font-bold text-slate-800">Leave Management</h3>
             </div>
 
             <!-- Tab Switcher (Applications Table vs Branch Map) -->
@@ -753,7 +752,6 @@
             <div class="p-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h4 class="text-sm font-bold text-slate-800">Employee Loan Applications & Repayment Life Cycle</h4>
-                <p class="text-xs text-slate-400">Disbursement tracking, installment schedules & monthly deduction status</p>
               </div>
               <select id="loanStatusFilter" onchange="loadLoans()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-700">
                 <option value="ALL">All Statuses</option>
@@ -797,7 +795,6 @@
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="text-base font-bold text-slate-800">Employee Master Roster</h3>
-              <p class="text-xs text-slate-500">Corporate directory, status management & unique employee onboarding</p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -854,7 +851,6 @@
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="text-base font-bold text-slate-800">Corporate Payroll & Compensation</h3>
-              <p class="text-xs text-slate-500">Gross earnings, statutory tax, absence deductions & individual payslip downloads</p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -918,8 +914,7 @@
           
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="text-base font-bold text-slate-800">Public & Gazetted Holiday Calendar (2026)</h3>
-              <p class="text-xs text-slate-500">Official non-working days, bank observances & religious holidays</p>
+              <h3 class="text-base font-bold text-slate-800">Public & Gazetted Holiday Calendar</h3>
             </div>
 
             <button onclick="openModalAddHoliday()" class="px-4 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
@@ -960,14 +955,9 @@
           
           <!-- Report Filter Card -->
           <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs space-y-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h3 class="text-base font-bold text-slate-800">Individual Employee Comprehensive Report</h3>
-                <p class="text-xs text-slate-500">Detailed historical attendance statistics, punctuality variance, leave consumption & PDF export</p>
-              </div>
-
+            <div class="flex items-center justify-end">
               <!-- Export Button -->
-              <button onclick="downloadEmployeeReportPdf()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm active:scale-95">
+              <button onclick="downloadEmployeeReportPdf()" class="px-4 py-2 bg-gradient-to-r from-[#0F9D91] to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm active:scale-95">
                 <i class="fa-solid fa-file-pdf"></i>
                 <span>Download Official PDF Report</span>
               </button>
@@ -1032,7 +1022,6 @@
           <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="text-base font-bold text-slate-800">Notifications & Real-Time Activity Feed</h3>
-              <p class="text-xs text-slate-500">Live operational alerts, policy violations, leave and loan submissions</p>
             </div>
 
             <button onclick="markAllNotificationsRead()" class="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition">
@@ -1069,7 +1058,6 @@
           <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="text-base font-bold text-slate-800">Geofence Perimeter & Anti-Spoofing Engine</h3>
-              <p class="text-xs text-slate-500">Spatial radius configuration, GPS mock provider detection & biometric device binding</p>
             </div>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1523,17 +1511,21 @@
         const totalMonthlyPayroll = demoPayroll.reduce((acc, r) => acc + (r.grossSalary || r.basicSalary || 0), 0);
 
         const recent = [
-          ...getSharedPunches().slice(0, 3).map(p => ({
-            user: p.fullName,
-            action: `${p.punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} (${p.status})`,
-            time: p.time,
+          ...getSharedPunches().slice(0, 4).map(p => ({
+            title: p.fullName || 'Workforce Member',
+            user: p.fullName || 'Workforce Member',
+            description: `${p.punchType === 'CHECK_IN' ? 'Check-In Verified' : 'Check-Out Recorded'} (${p.status || 'Verified'})`,
+            action: `${p.punchType === 'CHECK_IN' ? 'Check-In Verified' : 'Check-Out Recorded'} (${p.status || 'Verified'})`,
+            time: p.time || 'Today',
+            timestamp: p.timestamp || new Date().toISOString(),
+            avatarInitials: (p.fullName || 'EM').split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase(),
             icon: p.punchType === 'CHECK_IN' ? 'fa-fingerprint' : 'fa-right-from-bracket',
             color: p.status === 'LATE' ? 'text-amber-500' : 'text-emerald-500'
           })),
-          { user: 'Sajjad Ali', action: 'Biometric Verified Punch', time: '09:05 AM', icon: 'fa-fingerprint', color: 'text-emerald-500' },
-          { user: 'Bilal Hassan', action: 'Late Check-in Recorded', time: '09:42 AM', icon: 'fa-clock', color: 'text-amber-500' },
-          { user: 'Zainab Malik', action: 'Approved Annual Leave', time: 'Yesterday', icon: 'fa-plane', color: 'text-blue-500' }
-        ].slice(0, 4);
+          { title: 'Sajjad Ali', user: 'Sajjad Ali', description: 'Biometric Verified Check-In', action: 'Biometric Verified Check-In', time: '09:05 AM', timestamp: new Date().toISOString(), avatarInitials: 'SA', icon: 'fa-fingerprint', color: 'text-emerald-500' },
+          { title: 'Bilal Hassan', user: 'Bilal Hassan', description: 'Late Check-in Recorded', action: 'Late Check-in Recorded', time: '09:42 AM', timestamp: new Date().toISOString(), avatarInitials: 'BH', icon: 'fa-clock', color: 'text-amber-500' },
+          { title: 'Zainab Malik', user: 'Zainab Malik', description: 'Approved Annual Leave', action: 'Approved Annual Leave', time: 'Yesterday', timestamp: new Date().toISOString(), avatarInitials: 'ZM', icon: 'fa-plane', color: 'text-blue-500' }
+        ].slice(0, 5);
 
         payload = {
           success: true,
@@ -1848,15 +1840,15 @@
       // Update page title
       const titles = {
         dashboard: 'Dashboard',
-        attendance: 'Workforce Daily Attendance',
-        leaves: 'Leave Management & Regional Distribution',
-        loans: 'Loan Management & Disbursals',
-        employees: 'Corporate Employee Master Roster',
-        payroll: 'Corporate Payroll & Payslips',
-        holidays: 'Public & Gazetted Holiday Calendar',
-        reports: 'Individual Employee Comprehensive Reports',
-        notifications: 'Alerts & System Activity',
-        security: 'Geofence Perimeter & Anti-Spoofing Settings',
+        attendance: 'Attendance',
+        leaves: 'Leave Management',
+        loans: 'Loan Management',
+        employees: 'Employee Roster',
+        payroll: 'Payroll & Payslips',
+        holidays: 'Holiday Calendar',
+        reports: 'Employee Reports',
+        notifications: 'Notifications',
+        security: 'Geofence & Security',
       };
       document.getElementById('pageTitle').innerText = titles[viewName] !== undefined ? titles[viewName] : '';
 
@@ -2626,23 +2618,50 @@
 
     function renderRecentActivities(activities) {
       const container = document.getElementById('recentActivityList');
+      if (!container) return;
       container.innerHTML = '';
       if (!activities || !activities.length) {
-        container.innerHTML = '<p class="text-xs text-slate-400 py-2">No recent employee activities.</p>';
+        container.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">No recent workforce activities.</p>';
         return;
       }
 
-      activities.slice(0, 5).forEach(act => {
+      activities.slice(0, 6).forEach(act => {
+        const userName = act.user || act.title || act.employeeName || 'Staff Member';
+        const actionDesc = act.action || act.description || 'Attendance Verified';
+        
+        let timeFormatted = act.time || 'Just now';
+        if (!act.time && act.timestamp) {
+          try {
+            const dt = new Date(act.timestamp);
+            if (!isNaN(dt.getTime())) {
+              timeFormatted = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+          } catch(e) {}
+        }
+
+        const initials = act.avatarInitials || userName.split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase() || 'EM';
+        
+        const isLate = actionDesc.toLowerCase().includes('late');
+        const isLeave = actionDesc.toLowerCase().includes('leave');
+        const isOut = actionDesc.toLowerCase().includes('out');
+        const iconClass = act.icon || (isLeave ? 'fa-plane' : isLate ? 'fa-clock' : isOut ? 'fa-right-from-bracket' : 'fa-fingerprint');
+        const iconColor = act.color ? act.color.split(' ')[0] : (isLate ? 'text-amber-500' : isLeave ? 'text-blue-500' : isOut ? 'text-rose-500' : 'text-emerald-500');
+
         const item = document.createElement('div');
-        item.className = 'flex items-start gap-2.5 text-xs';
+        item.className = 'flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100';
         item.innerHTML = `
-          <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 text-slate-700 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
-            ${act.avatarInitials || 'EM'}
+          <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0 border border-slate-200">
+            ${initials}
           </div>
-          <div class="flex-1 overflow-hidden">
-            <div class="font-bold text-slate-800 leading-tight">${act.title}</div>
-            <div class="text-[11px] text-slate-500 truncate">${act.description}</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">${new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-slate-800 truncate">${userName}</span>
+              <span class="text-[10px] text-slate-400 font-medium shrink-0 ml-1 mono-num">${timeFormatted}</span>
+            </div>
+            <div class="text-[11px] text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
+              <i class="fa-solid ${iconClass} ${iconColor} text-[10px]"></i>
+              <span class="truncate">${actionDesc}</span>
+            </div>
           </div>
         `;
         container.appendChild(item);

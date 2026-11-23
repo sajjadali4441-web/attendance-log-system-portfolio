@@ -10,6 +10,21 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
+  <script>
+    // Instant session check before paint to eliminate login screen flash
+    (function() {
+      try {
+        var rawUser = localStorage.getItem('als_mobile_active_user');
+        if (rawUser && rawUser !== 'null') {
+          var u = JSON.parse(rawUser);
+          if (u && (u.employeeCode || u.fullName || u.id)) {
+            document.documentElement.classList.add('has-active-session');
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
     
@@ -20,18 +35,27 @@
       font-family: 'Chakra Petch', monospace;
     }
 
-    /* Dynamic CSS Theme Variables */
+    /* Dynamic CSS Theme Variables - Aligned with Admin Portal (#142B49 Executive Navy & #0F9D91 Teal) */
     :root {
-      --theme-primary: #088395;
-      --theme-secondary: #0b8b98;
-      --theme-border: #99d5e3;
-      --theme-card-from: #d2eef5;
-      --theme-card-to: #ebf7fa;
-      --theme-viewport-bg: #e6f4f8;
-      --theme-checkin-bg: #c7edf5;
-      --theme-checkin-hover: #b0e4ee;
-      --theme-checkin-text: #0f766e;
-      --theme-active-nav: rgba(255, 255, 255, 0.25);
+      --theme-primary: #142B49;
+      --theme-secondary: #0F9D91;
+      --theme-border: #cbd5e1;
+      --theme-card-from: #f8fafc;
+      --theme-card-to: #ffffff;
+      --theme-viewport-bg: #f8fafc;
+      --theme-checkin-bg: #e6fffa;
+      --theme-checkin-hover: #ccfbf1;
+      --theme-checkin-text: #0F9D91;
+      --theme-active-nav: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Immediate persistence style bypass */
+    html.has-active-session #loginScreenView {
+      display: none !important;
+    }
+    html:not(.has-active-session) #homeScreenView,
+    html:not(.has-active-session) #bottomNavBar {
+      display: none !important;
     }
 
     /* Apply dynamic theme classes */
@@ -106,7 +130,7 @@
       </div>
 
       <!-- Mobile App Viewport (Inside the Phone) -->
-      <div id="mobileAppViewport" class="w-full h-full flex flex-col bg-[#e6f4f8] text-slate-800 relative overflow-hidden transition-colors duration-300">
+      <div id="mobileAppViewport" class="w-full h-full flex flex-col bg-[#f8fafc] text-slate-800 relative overflow-hidden transition-colors duration-300">
 
         <!-- In-App Verified Punch Toast Notification -->
         <div id="mobilePunchToast" class="hidden absolute top-12 left-3 right-3 z-50 bg-slate-900/95 border border-emerald-500/80 text-white rounded-2xl p-3 shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in fade-in slide-in-from-top-3 duration-200">
@@ -125,103 +149,62 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 0: LOGIN & AUTHENTICATION SCREEN VIEW -->
         <!-- ==================================================================== -->
-        <div id="loginScreenView" class="w-full h-full flex flex-col relative overflow-y-auto no-scrollbar bg-gradient-to-b from-[#091b26] via-[#0d2a3a] to-[#06141d] text-white p-5 select-none z-50">
+        <div id="loginScreenView" class="w-full h-full flex flex-col justify-between overflow-y-auto no-scrollbar bg-gradient-to-b from-[#142B49] via-[#0f2137] to-[#0c1b30] text-white p-6 select-none z-50">
           
-          <!-- Top StatusBar & Shield -->
-          <div class="flex items-center justify-between text-[11px] text-teal-400 font-semibold pt-6 pb-2">
-            <div class="flex items-center gap-1.5">
-              <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i>
-              <span>GEOFENCE PERIMETER ACTIVE</span>
+          <div class="my-auto w-full max-w-xs mx-auto space-y-6">
+            <!-- Brand Logo & Title -->
+            <div class="flex flex-col items-center text-center">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#0F9D91] to-[#142B49] p-0.5 shadow-xl shadow-slate-950/50 flex items-center justify-center mb-3">
+                <div class="w-full h-full bg-[#142B49] rounded-[14px] flex items-center justify-center">
+                  <i class="fa-solid fa-fingerprint text-2xl text-[#0F9D91]"></i>
+                </div>
+              </div>
+              <h2 class="text-xl font-bold tracking-tight text-white">ALS Mobile</h2>
             </div>
-            <div class="flex items-center gap-1.5 bg-teal-950/80 border border-teal-700/60 px-2.5 py-0.5 rounded-full text-[10px]">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="text-teal-200">v1.0.4 SECURE</span>
-            </div>
+
+            <!-- Login Form -->
+            <form id="mobileLoginForm" onsubmit="handleMobileLogin(event)" class="space-y-4">
+              <div id="loginErrorMessage" class="hidden p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold text-center">
+              </div>
+
+              <!-- Username Field -->
+              <div>
+                <label for="loginUsername" class="block text-xs font-semibold text-slate-300 mb-1.5">Username</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <i class="fa-solid fa-user text-xs"></i>
+                  </span>
+                  <input type="text" id="loginUsername" required placeholder="Enter Username or Employee ID" class="w-full bg-white/5 border border-white/15 focus:border-[#0F9D91] focus:bg-white/10 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-400 font-medium focus:outline-none transition" />
+                </div>
+              </div>
+
+              <!-- Password Field -->
+              <div>
+                <label for="loginPassword" class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                  </span>
+                  <input type="password" id="loginPassword" required placeholder="Enter Password" class="w-full bg-white/5 border border-white/15 focus:border-[#0F9D91] focus:bg-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-400 font-medium focus:outline-none transition" />
+                  <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition">
+                    <i id="passwordToggleIcon" class="fa-solid fa-eye text-xs"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Login Button -->
+              <button type="submit" id="btnMobileLogin" class="w-full py-2.5 bg-[#0F9D91] hover:bg-teal-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#0F9D91]/20 flex items-center justify-center gap-2 active:scale-95 transition mt-2">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Login</span>
+              </button>
+            </form>
           </div>
 
-          <!-- Logo & Brand Title -->
-          <div class="flex flex-col items-center text-center my-auto py-2">
-            <div class="w-18 h-18 rounded-3xl bg-gradient-to-tr from-[#0F9D91] to-[#142B49] p-0.5 shadow-xl shadow-teal-950/60 flex items-center justify-center mb-2.5 relative">
-              <div class="w-full h-full bg-[#0a1e29]/90 rounded-[22px] flex items-center justify-center backdrop-blur-xs">
-                <i class="fa-solid fa-fingerprint text-3xl text-teal-300"></i>
-              </div>
-              <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shadow">
-                <i class="fa-solid fa-check"></i>
-              </div>
-            </div>
-            <h2 class="text-xl font-black tracking-tight text-white">ALS Mobile Attendance</h2>
-            <p class="text-[11px] text-teal-200/80 mt-0.5 max-w-[240px]">Workforce Geofence & Check-In Portal</p>
+          <!-- Subtle App Version Label at Very Bottom -->
+          <div class="pt-4 pb-2 text-center text-[11px] text-slate-400/80 font-medium tracking-wide">
+            Version 1.0.4
           </div>
 
-          <!-- Quick 1-Click Employee Switcher -->
-          <div class="bg-white/5 border border-white/10 rounded-2xl p-3 my-2 backdrop-blur-md">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-teal-300 flex items-center gap-1">
-                <i class="fa-solid fa-bolt text-amber-400"></i> Quick Select Employee
-              </span>
-              <span class="text-[9px] text-teal-200/70 font-semibold">Live Synced</span>
-            </div>
-            <select id="loginQuickSelect" onchange="onQuickSelectEmployee(this.value)" class="w-full bg-[#091b26] border border-teal-600/50 rounded-xl px-2.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-teal-400">
-              <option value="">-- Choose Corporate Employee --</option>
-            </select>
-          </div>
-
-          <!-- Login Form -->
-          <form id="mobileLoginForm" onsubmit="handleMobileLogin(event)" class="space-y-2.5 my-auto">
-            <div id="loginErrorMessage" class="hidden p-2 rounded-xl bg-rose-500/25 border border-rose-500/50 text-rose-200 text-xs font-semibold text-center">
-            </div>
-
-            <!-- Employee ID / Email -->
-            <div>
-              <label class="block text-[11px] font-bold text-slate-300 mb-1">Employee ID or Email</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                  <i class="fa-solid fa-id-badge text-xs"></i>
-                </span>
-                <input type="text" id="loginUsername" required placeholder="e.g. TC-1002 or ahmed.khan" class="w-full bg-white/5 border border-white/15 focus:border-teal-400 focus:bg-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 font-semibold focus:outline-none transition" />
-              </div>
-            </div>
-
-            <!-- Password / Security PIN -->
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block text-[11px] font-bold text-slate-300">Password / PIN</label>
-                <span class="text-[10px] text-slate-400">Default: <strong class="text-teal-300 font-mono">123456</strong></span>
-              </div>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                  <i class="fa-solid fa-lock text-xs"></i>
-                </span>
-                <input type="password" id="loginPassword" value="123456" required placeholder="Enter PIN (123456)" class="w-full bg-white/5 border border-white/15 focus:border-teal-400 focus:bg-white/10 rounded-xl pl-9 pr-9 py-2 text-xs text-white placeholder-slate-500 font-semibold focus:outline-none transition" />
-                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
-                  <i id="passwordToggleIcon" class="fa-solid fa-eye text-xs"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Sign In Button -->
-            <button type="submit" id="btnMobileLogin" class="w-full py-2.5 bg-gradient-to-r from-[#0F9D91] to-teal-600 hover:from-teal-600 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-950/60 flex items-center justify-center gap-2 active:scale-95 transition mt-2">
-              <i class="fa-solid fa-right-to-bracket"></i>
-              <span>Sign In & Verify Location</span>
-            </button>
-          </form>
-
-          <!-- Quick Fingerprint Biometric Auth Button -->
-          <div class="pt-2 text-center">
-            <button type="button" onclick="quickBiometricLogin()" class="group inline-flex flex-col items-center gap-1 text-slate-400 hover:text-teal-300 transition">
-              <div class="w-11 h-11 rounded-full border border-teal-500/40 bg-teal-950/50 flex items-center justify-center group-hover:border-teal-400 group-hover:bg-teal-900/50 transition">
-                <i class="fa-solid fa-fingerprint text-lg text-teal-400 group-hover:scale-110 transition"></i>
-              </div>
-              <span class="text-[10px] font-semibold text-slate-400">One-Tap Biometric Login</span>
-            </button>
-          </div>
-
-          <!-- Bottom Footer Notice -->
-          <div class="text-center pt-2 border-t border-white/10">
-            <p class="text-[10px] text-slate-400 leading-relaxed">
-              Added a new employee in Admin Portal? Pick them above or type their ID & default PIN (<code class="text-teal-300">123456</code>).
-            </p>
-          </div>
         </div>
 
         <!-- ==================================================================== -->
@@ -229,14 +212,14 @@
         <!-- ==================================================================== -->
         <div id="homeScreenView" class="w-full h-full flex flex-col relative overflow-hidden">
 
-          <!-- Top Android App Header (Pic1.jpeg & Bug Report) -->
-          <div class="bg-white px-4 pt-8 pb-3 flex items-center justify-between border-b border-cyan-100 shadow-sm z-30">
+          <!-- Top Android App Header -->
+          <div class="bg-white px-4 pt-8 pb-3 flex items-center justify-between border-b border-slate-200 shadow-xs z-30">
             <button onclick="toggleDrawer(true)" class="text-theme-primary hover:opacity-80 text-lg p-1 transition">
               <i class="fa-solid fa-bars"></i>
             </button>
             <h1 class="text-xl font-bold text-theme-primary">Home</h1>
             <div class="flex items-center gap-4 text-theme-primary">
-              <!-- Palette Icon for Theme Change (Fixed) -->
+              <!-- Palette Icon for Theme Change -->
               <button onclick="toggleThemePicker(true)" class="hover:opacity-80 p-1 transition" title="Change Theme Color">
                 <i class="fa-solid fa-palette text-base"></i>
               </button>
@@ -246,13 +229,13 @@
             </div>
           </div>
 
-          <!-- Offline Resilience Banner (pic2.jpeg: "You are offline.. but still can mark Attendance") -->
+          <!-- Offline Resilience Banner -->
           <div id="mobileOfflineBanner" class="hidden bg-slate-800 text-amber-300 px-3 py-2 text-xs flex items-center justify-between shadow-md z-20">
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
               <span>You are offline.. but still can mark Attendance</span>
             </div>
-            <button onclick="syncOfflineQueue()" class="text-cyan-400 hover:text-cyan-300">
+            <button onclick="syncOfflineQueue()" class="text-teal-400 hover:text-teal-300">
               <i class="fa-solid fa-rotate text-sm"></i>
             </button>
           </div>
@@ -260,46 +243,34 @@
           <!-- Scrollable Main Screen Content -->
           <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
 
-            <!-- 1. Profile Identity Header Card (Pic1.jpeg) -->
-            <div id="profileCardHeader" class="m-3 p-4 bg-gradient-to-r from-[#d2eef5] to-[#ebf7fa] rounded-2xl border border-theme-border shadow-sm relative overflow-hidden transition-colors duration-300">
+            <!-- 1. Profile Identity Header Card -->
+            <div id="profileCardHeader" class="m-3 p-4 bg-white rounded-2xl border border-slate-200/90 shadow-2xs relative overflow-hidden transition-colors duration-300">
               <div class="flex gap-4">
                 <!-- Avatar Frame -->
-                <div class="w-20 h-24 rounded-2xl border-4 border-teal-500/80 bg-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
-                  <i class="fa-solid fa-user text-4xl text-slate-500"></i>
+                <div class="w-18 h-22 rounded-2xl border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shadow-2xs shrink-0">
+                  <i class="fa-solid fa-user text-3xl text-slate-400"></i>
                 </div>
 
-                <!-- Name & Designation & User ID (Task 1) -->
-                <div class="flex-1 space-y-1.5">
+                <!-- Name & Designation & User ID -->
+                <div class="flex-1 space-y-1">
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-id-badge text-theme-primary text-xs"></i>
-                    <span class="font-bold text-base text-slate-800" id="profileNameDisplay">Sajjad Ali</span>
+                    <span class="font-bold text-sm text-slate-800" id="profileNameDisplay">Sajjad Ali</span>
                   </div>
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-shield text-theme-secondary text-xs"></i>
-                    <span class="text-xs text-slate-700 font-medium" id="profileTitleDisplay">Senior Product Designer</span>
+                    <span class="text-xs text-slate-600 font-medium" id="profileTitleDisplay">Senior Product Designer</span>
                   </div>
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-id-card text-theme-primary text-xs"></i>
-                    <span class="text-xs text-slate-600 font-semibold" id="profileIdDisplay">ID: AK-8924</span>
+                    <span class="text-xs text-slate-500 font-semibold" id="profileIdDisplay">ID: AK-8924</span>
                   </div>
 
                   <!-- View Profile Button -->
-                  <button onclick="toggleProfileModal(true)" class="mt-1 px-4 py-1.5 bg-white/90 hover:bg-white text-slate-700 text-xs font-semibold rounded-lg shadow-sm border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
-                    <i class="fa-solid fa-user text-theme-primary text-xs"></i> View Profile
+                  <button onclick="toggleProfileModal(true)" class="mt-1 px-3 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs border border-slate-200 flex items-center gap-1.5 active:scale-95 transition">
+                    <i class="fa-solid fa-user text-[#0F9D91] text-xs"></i> View Profile
                   </button>
                 </div>
-              </div>
-
-              <!-- Voice Recognition Feature Toggle (Pic1.jpeg) -->
-              <div class="mt-3 pt-2.5 border-t border-teal-200/60 flex items-center justify-between text-xs text-slate-700 font-semibold">
-                <div class="flex items-center gap-2">
-                  <i class="fa-solid fa-microphone-lines text-theme-primary text-sm"></i>
-                  <span>Voice Recognition</span>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="voiceToggle" class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"></div>
-                </label>
               </div>
             </div>
 
@@ -425,7 +396,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 2: MY ATTENDANCE SUMMARY SCREEN VIEW (Matching Reference Screen) -->
         <!-- ==================================================================== -->
-        <div id="attendanceSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="attendanceSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar with Back Navigation Arrow (Matching Reference Screen) -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -578,7 +549,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 3: MY ATTENDANCE RECORDS SCREEN VIEW (Matching Reference Screen) -->
         <!-- ==================================================================== -->
-        <div id="attendanceRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="attendanceRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar with Back Navigation Arrow -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -704,7 +675,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 4: MY ROSTER SCREEN VIEW (Matching Reference Screen 1) -->
         <!-- ==================================================================== -->
-        <div id="myRosterScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="myRosterScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -787,7 +758,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 5: LOCATION/DEPARTMENT/SHIFT WISE SUMMARY (Screenshot 2) -->
         <!-- ==================================================================== -->
-        <div id="locationShiftScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="locationShiftScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -897,7 +868,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 6: EMPLOYEES ATTENDANCE SUMMARY (Screenshot 3) -->
         <!-- ==================================================================== -->
-        <div id="employeesSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="employeesSummaryScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -1006,7 +977,7 @@
         <!-- ==================================================================== -->
         <!-- SCREEN 7: EMPLOYEES ATTENDANCE RECORDS (Screenshot 4) -->
         <!-- ==================================================================== -->
-        <div id="employeesRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#e6f4f8]">
+        <div id="employeesRecordsScreenView" class="hidden w-full h-full flex flex-col relative overflow-hidden bg-[#f8fafc]">
           
           <!-- Top App Bar -->
           <div class="bg-theme-primary text-white px-3 pt-8 pb-3 flex items-center justify-between shadow-md z-30 transition-colors duration-300">
@@ -1640,17 +1611,26 @@
       const errBox = document.getElementById('loginErrorMessage');
       if (errBox) errBox.classList.add('hidden');
 
+      if (!username) {
+        if (errBox) {
+          errBox.innerText = 'Please enter your Username or Employee ID.';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
       const employees = getSharedEmployees();
       const emp = employees.find(e => 
-        (e.employeeCode && e.employeeCode.toLowerCase() === username) ||
-        (e.email && e.email.toLowerCase() === username) ||
-        (e.id && e.id.toLowerCase() === username) ||
-        (e.fullName && e.fullName.toLowerCase() === username)
+        (e.employeeCode && e.employeeCode.trim().toLowerCase() === username) ||
+        (e.email && e.email.trim().toLowerCase() === username) ||
+        (e.id && e.id.trim().toLowerCase() === username) ||
+        (e.fullName && e.fullName.trim().toLowerCase() === username) ||
+        (e.username && e.username.trim().toLowerCase() === username)
       );
 
       if (!emp) {
         if (errBox) {
-          errBox.innerText = 'Employee not found. Please verify Employee Code/Email or register from Admin Portal.';
+          errBox.innerText = 'Employee not found. Please verify Username or Employee ID.';
           errBox.classList.remove('hidden');
         }
         return;
@@ -1659,7 +1639,7 @@
       const validPass = emp.password || '123456';
       if (password && password !== validPass && password !== '123456' && password !== '123') {
         if (errBox) {
-          errBox.innerText = 'Invalid password or PIN. (Default PIN: 123456)';
+          errBox.innerText = 'Invalid password.';
           errBox.classList.remove('hidden');
         }
         return;
@@ -1669,27 +1649,25 @@
       showAppForUser(emp);
     }
 
-    function quickBiometricLogin() {
-      const employees = getSharedEmployees();
-      const active = getActiveMobileUser() || employees[0];
-      setActiveMobileUser(active);
-      showAppForUser(active);
-      playSuccessChime();
-      showPunchToast('Biometric Login Verified', new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()), `Authenticated as ${active.fullName} (${active.employeeCode})`);
-    }
-
     function mobileLogout() {
       setActiveMobileUser(null);
+      document.documentElement.classList.remove('has-active-session');
       lastCheckInTime = null;
       lastCheckOutTime = null;
       document.querySelectorAll('[id$="ScreenView"]').forEach(v => v.classList.add('hidden'));
       document.getElementById('loginScreenView')?.classList.remove('hidden');
       document.getElementById('bottomNavBar')?.classList.add('hidden');
       document.getElementById('sidebarDrawer')?.classList.add('hidden');
-      populateQuickSelectEmployees();
+      const userInp = document.getElementById('loginUsername');
+      if (userInp) userInp.value = '';
+      const passInp = document.getElementById('loginPassword');
+      if (passInp) passInp.value = '';
+      const errBox = document.getElementById('loginErrorMessage');
+      if (errBox) errBox.classList.add('hidden');
     }
 
     function showAppForUser(emp) {
+      document.documentElement.classList.add('has-active-session');
       document.getElementById('loginScreenView')?.classList.add('hidden');
       document.getElementById('homeScreenView')?.classList.remove('hidden');
       document.getElementById('bottomNavBar')?.classList.remove('hidden');
@@ -1832,16 +1810,16 @@
     // 12 Curated Enterprise Themes
     const THEMES = {
       teal: {
-        name: 'Classic Teal',
-        primary: '#088395',
-        secondary: '#0b8b98',
-        border: '#99d5e3',
-        cardFrom: '#d2eef5',
-        cardTo: '#ebf7fa',
-        viewportBg: '#e6f4f8',
-        checkInBg: '#c7edf5',
-        checkInHover: '#b0e4ee',
-        checkInText: '#0f766e'
+        name: 'Executive Navy & Teal',
+        primary: '#142B49',
+        secondary: '#0F9D91',
+        border: '#cbd5e1',
+        cardFrom: '#f8fafc',
+        cardTo: '#ffffff',
+        viewportBg: '#f8fafc',
+        checkInBg: '#e6fffa',
+        checkInHover: '#ccfbf1',
+        checkInText: '#0F9D91'
       },
       blue: {
         name: 'Ocean Blue',
