@@ -1402,16 +1402,16 @@
     // =========================================================================
     const originalFetch = window.fetch;
     const demoEmployees = [
-      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: null },
-      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: null },
-      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null },
-      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null },
-      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null },
-      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave' },
-      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave' },
-      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
-      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
-      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null }
+      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 8472911', basicSalary: 320000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: '05:15 PM' },
+      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 321 4455667', basicSalary: 350000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: '05:10 PM' },
+      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 333 5566778', basicSalary: 280000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null },
+      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 301 6677889', basicSalary: 260000, employmentStatus: 'ACTIVE', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null },
+      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 345 7788990', basicSalary: 240000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null },
+      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 1122334', basicSalary: 220000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave' },
+      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 312 2233445', basicSalary: 340000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave' },
+      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 334 3344556', basicSalary: 210000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
+      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 9988776', basicSalary: 160000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
+      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 322 8877665', basicSalary: 190000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null }
     ];
 
     const demoLeaves = [
@@ -1426,10 +1426,29 @@
     ];
 
     const demoPayroll = [
-      { id: 'pay-1', employeeName: 'Sajjad Ali', employeeCode: 'AK-8924', department: 'Product Design & UX', basicSalary: 320000, allowances: 48000, deductions: 12000, netSalary: 356000, status: 'DISBURSED' },
-      { id: 'pay-2', employeeName: 'Ahmed Khan', employeeCode: 'TC-1002', department: 'Technology & Engineering', basicSalary: 350000, allowances: 52000, deductions: 15000, netSalary: 387000, status: 'DISBURSED' },
-      { id: 'pay-3', employeeName: 'Fatima Zahra', employeeCode: 'TC-1003', department: 'Technology & Engineering', basicSalary: 280000, allowances: 42000, deductions: 10000, netSalary: 312000, status: 'DISBURSED' },
-      { id: 'pay-4', employeeName: 'Mariam Noor', employeeCode: 'HR-5001', department: 'Human Resources', basicSalary: 190000, allowances: 28000, deductions: 7000, netSalary: 211000, status: 'DISBURSED' }
+      { id: 'pay-1', employeeId: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeName: 'Sajjad Ali', employeeCode: 'AK-8924', department: 'Product Design & UX', designation: 'Senior Product Designer', month: 'October 2026', basicSalary: 320000, grossSalary: 368000, taxDeductions: 12000, loanInstallmentDeduction: 0, totalDeductions: 12000, netSalary: 356000, status: 'DISBURSED' },
+      { id: 'pay-2', employeeId: 'usr-ahmed-khan-002', employeeName: 'Ahmed Khan', employeeCode: 'TC-1002', department: 'Technology & Engineering', designation: 'Lead Mobile Architect', month: 'October 2026', basicSalary: 350000, grossSalary: 402000, taxDeductions: 15000, loanInstallmentDeduction: 0, totalDeductions: 15000, netSalary: 387000, status: 'DISBURSED' },
+      { id: 'pay-3', employeeId: 'usr-fatima-zahra-003', employeeName: 'Fatima Zahra', employeeCode: 'TC-1003', department: 'Technology & Engineering', designation: 'Senior Backend Engineer', month: 'October 2026', basicSalary: 280000, grossSalary: 322000, taxDeductions: 10000, loanInstallmentDeduction: 0, totalDeductions: 10000, netSalary: 312000, status: 'DISBURSED' },
+      { id: 'pay-4', employeeId: 'usr-bilal-hassan-004', employeeName: 'Bilal Hassan', employeeCode: 'TC-1004', department: 'Technology & Engineering', designation: 'Cloud & DevOps Engineer', month: 'October 2026', basicSalary: 260000, grossSalary: 299000, taxDeductions: 9000, loanInstallmentDeduction: 25000, totalDeductions: 34000, netSalary: 265000, status: 'DISBURSED' },
+      { id: 'pay-5', employeeId: 'usr-mariam-noor-010', employeeName: 'Mariam Noor', employeeCode: 'HR-5001', department: 'Human Resources', designation: 'People Operations Specialist', month: 'October 2026', basicSalary: 190000, grossSalary: 218000, taxDeductions: 7000, loanInstallmentDeduction: 0, totalDeductions: 7000, netSalary: 211000, status: 'DISBURSED' }
+    ];
+
+    const demoHolidays = [
+      { id: 'hol-1', title: 'Pakistan Day', date: '2026-03-23', dayOfWeek: 'Monday', holidayType: 'Gazetted Public', appliesTo: 'National (All Branches)', description: 'Commemoration of the Lahore Resolution 1940', isPassed: true },
+      { id: 'hol-2', title: 'Eid-ul-Fitr (Day 1)', date: '2026-03-21', dayOfWeek: 'Saturday', holidayType: 'Religious', appliesTo: 'National (All Branches)', description: 'Islamic religious festival marking end of Ramadan', isPassed: true },
+      { id: 'hol-3', title: 'Labour Day', date: '2026-05-01', dayOfWeek: 'Friday', holidayType: 'Gazetted Public', appliesTo: 'National (All Branches)', description: 'International Workers Memorial Day', isPassed: true },
+      { id: 'hol-4', title: 'Independence Day', date: '2026-08-14', dayOfWeek: 'Friday', holidayType: 'National Holiday', appliesTo: 'National (All Branches)', description: 'Commemoration of 79th Independence of Pakistan', isPassed: true },
+      { id: 'hol-5', title: 'Eid Milad-un-Nabi', date: '2026-09-05', dayOfWeek: 'Saturday', holidayType: 'Religious', appliesTo: 'National (All Branches)', description: '12 Rabi-ul-Awwal federal public observance', isPassed: true },
+      { id: 'hol-6', title: 'Iqbal Day', date: '2026-11-09', dayOfWeek: 'Monday', holidayType: 'Gazetted Public', appliesTo: 'National (All Branches)', description: 'Birthday of National Poet Allama Muhammad Iqbal', isPassed: true },
+      { id: 'hol-7', title: 'Quaid-e-Azam Day & Christmas', date: '2026-12-25', dayOfWeek: 'Friday', holidayType: 'National Holiday', appliesTo: 'National (All Branches)', description: 'Birthday of Founder Muhammad Ali Jinnah and Christmas', isPassed: false },
+      { id: 'hol-8', title: 'New Year Day', date: '2027-01-01', dayOfWeek: 'Friday', holidayType: 'Bank / Corporate', appliesTo: 'Corporate Branches', description: 'Annual bank closure and financial year kickoff', isPassed: false }
+    ];
+
+    const demoNotifications = [
+      { id: 'notif-1', title: 'Late Check-in Recorded', message: 'Bilal Hassan recorded check-in at 09:42 AM (exceeded grace period by 12 minutes).', type: 'WARNING', time: 'Today, 09:42 AM', isRead: false },
+      { id: 'notif-2', title: 'New Leave Application', message: 'Usman Tariq submitted Casual Leave application for Nov 25 - Nov 26.', type: 'INFO', time: 'Today, 09:15 AM', isRead: false },
+      { id: 'notif-3', title: 'Biometric Batch Punch', message: 'Morning shift check-in sync complete for Headquarters Branch (5 employees).', type: 'SUCCESS', time: 'Today, 09:08 AM', isRead: true },
+      { id: 'notif-4', title: 'October Payroll Disbursed', message: 'October 2026 executive payroll disbursement successfully transferred via 1Link.', type: 'SUCCESS', time: '31 Oct 2026', isRead: true }
     ];
 
     window.fetch = async function(url, options) {
@@ -1507,12 +1526,106 @@
           employees: list,
           data: { employees: list }
         };
+      } else if (u.includes('/api/v1/hrms/employees')) {
+        let list = [...demoEmployees];
+        if (u.includes('department=') && !u.includes('department=ALL')) {
+          const match = u.match(/department=([^&]+)/);
+          if (match) {
+            const dept = decodeURIComponent(match[1]);
+            list = list.filter(e => e.department.toLowerCase() === dept.toLowerCase());
+          }
+        }
+        if (u.includes('search=')) {
+          const match = u.match(/search=([^&]+)/);
+          if (match && match[1]) {
+            const q = decodeURIComponent(match[1]).toLowerCase();
+            list = list.filter(e => (e.fullName || '').toLowerCase().includes(q) || (e.employeeCode || '').toLowerCase().includes(q) || (e.jobTitle || '').toLowerCase().includes(q));
+          }
+        }
+        payload = { success: true, data: list };
+      } else if (u.includes('/api/v1/hrms/holidays')) {
+        payload = { success: true, data: demoHolidays };
+      } else if (u.includes('/api/v1/hrms/reports/employee')) {
+        const empIdMatch = u.match(/\/employee\/([^\/?]+)/);
+        const targetId = empIdMatch ? empIdMatch[1] : '';
+        const emp = demoEmployees.find(e => e.id === targetId) || demoEmployees[0];
+        payload = {
+          success: true,
+          data: {
+            employee: emp,
+            fromDate: '2026-11-01',
+            toDate: '2026-11-19',
+            attendanceStats: {
+              totalWorkingDays: 15,
+              totalPresentDays: 14,
+              presentRate: 93,
+              totalLateArrivals: 1,
+              totalAbsentDays: 0
+            },
+            leaveStats: {
+              balances: {
+                annualUsed: 2,
+                annualTotal: 14,
+                sickUsed: 1,
+                sickTotal: 10,
+                casualUsed: 0,
+                casualTotal: 10
+              }
+            },
+            loanStats: {
+              activeLoansCount: emp.id === 'usr-bilal-hassan-004' ? 1 : 0,
+              totalApprovedAmount: emp.id === 'usr-bilal-hassan-004' ? 150000 : 0,
+              outstandingBalance: emp.id === 'usr-bilal-hassan-004' ? 125000 : 0
+            },
+            dailyRecords: [
+              { date: '2026-11-19', day: 'Thursday', checkIn: emp.checkInTime || '09:00 AM', checkOut: '05:15 PM', status: emp.status === 'LATE' ? 'Late' : emp.status === 'ON_LEAVE' ? 'Approved Leave' : 'Present', variance: emp.status === 'LATE' ? '+42m' : '+5m' },
+              { date: '2026-11-18', day: 'Wednesday', checkIn: '08:58 AM', checkOut: '05:08 PM', status: 'Present', variance: '-2m' },
+              { date: '2026-11-17', day: 'Tuesday', checkIn: '09:02 AM', checkOut: '05:20 PM', status: 'Present', variance: '+2m' },
+              { date: '2026-11-16', day: 'Monday', checkIn: '08:55 AM', checkOut: '05:00 PM', status: 'Present', variance: '-5m' },
+              { date: '2026-11-13', day: 'Friday', checkIn: '08:50 AM', checkOut: '05:10 PM', status: 'Present', variance: '-10m' },
+              { date: '2026-11-12', day: 'Thursday', checkIn: '09:00 AM', checkOut: '05:00 PM', status: 'Present', variance: '0m' },
+              { date: '2026-11-11', day: 'Wednesday', checkIn: '08:54 AM', checkOut: '05:05 PM', status: 'Present', variance: '-6m' }
+            ]
+          }
+        };
       } else if (u.includes('/api/v1/hrms/leaves')) {
-        payload = { success: true, data: demoLeaves };
+        let list = [...demoLeaves];
+        if (u.includes('status=') && !u.includes('status=ALL')) {
+          const match = u.match(/status=([^&]+)/);
+          if (match) list = list.filter(l => l.status === match[1]);
+        }
+        payload = { success: true, data: list };
       } else if (u.includes('/api/v1/hrms/loans')) {
-        payload = { success: true, data: demoLoans };
+        let list = [...demoLoans];
+        if (u.includes('status=') && !u.includes('status=ALL')) {
+          const match = u.match(/status=([^&]+)/);
+          if (match) list = list.filter(l => l.status === match[1]);
+        }
+        payload = { success: true, data: list };
       } else if (u.includes('/api/v1/hrms/payroll')) {
-        payload = { success: true, data: { records: demoPayroll, totalDisbursed: 2840000 } };
+        const totalGross = demoPayroll.reduce((acc, r) => acc + (r.grossSalary || r.basicSalary || 0), 0);
+        const totalDeductions = demoPayroll.reduce((acc, r) => acc + (r.totalDeductions || r.taxDeductions || 0), 0);
+        const totalNet = demoPayroll.reduce((acc, r) => acc + (r.netSalary || 0), 0);
+        payload = {
+          success: true,
+          data: {
+            summary: {
+              totalGross: totalGross,
+              totalDeductions: totalDeductions,
+              totalNet: totalNet,
+              month: 'October 2026'
+            },
+            records: demoPayroll
+          }
+        };
+      } else if (u.includes('/api/v1/hrms/notifications')) {
+        payload = {
+          success: true,
+          data: {
+            unreadCount: 2,
+            notifications: demoNotifications
+          }
+        };
       } else if (u.includes('/api/v1/attendance/manager-quick-punch')) {
         payload = { success: true, message: 'Check-in recorded successfully in Demo Mode.' };
       }
@@ -2926,9 +3039,9 @@
             <span class="badge-pill bg-emerald-100 text-emerald-800 font-bold">${r.status}</span>
           </td>
           <td class="py-3 px-4 text-right">
-            <a href="/api/v1/payroll/salary-slip?format=pdf&month=${encodeURIComponent(r.month)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition">
+            <button onclick="downloadSalarySlip('${r.employeeId || ''}', '${r.employeeName || ''}')" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#0F9D91] font-bold text-xs border border-teal-200 transition active:scale-95">
               <i class="fa-solid fa-download mr-1"></i>PDF
-            </a>
+            </button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -3228,6 +3341,67 @@
       `;
     }
 
+    function downloadSalarySlip(empId, empName) {
+      const emp = demoEmployees.find(e => e.id === empId || e.fullName === empName) || demoEmployees[0];
+      const pay = demoPayroll.find(p => p.employeeName === emp.fullName || p.employeeId === emp.id) || demoPayroll[0];
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('Please allow popups to view and print Salary Slip', 'warning');
+        return;
+      }
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Salary Slip - ${emp.fullName} - October 2026</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #1e293b; max-width: 700px; margin: auto; }
+            .header { border-bottom: 2px solid #0F9D91; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+            .title { font-size: 20px; font-weight: bold; color: #0F9D91; }
+            .meta { font-size: 13px; color: #64748b; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { padding: 10px 14px; border: 1px solid #e2e8f0; font-size: 13px; }
+            th { background: #f8fafc; text-align: left; font-weight: 600; }
+            .net-pay { background: #f0fdfa; font-size: 16px; font-weight: bold; color: #0F9D91; }
+            .btn-print { background: #0F9D91; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+            @media print { .btn-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="title">ATTENDANCE LOG SYSTEM (ALS)</div>
+              <div class="meta">Corporate HRMS & Payroll Division</div>
+            </div>
+            <div style="text-align: right;">
+              <strong>PAYSLIP - OCTOBER 2026</strong><br>
+              <span class="meta">Status: DISBURSED</span>
+            </div>
+          </div>
+          <table>
+            <tr><th>Employee Name</th><td>${emp.fullName}</td><th>Employee ID</th><td>${emp.employeeCode}</td></tr>
+            <tr><th>Department</th><td>${emp.department}</td><th>Designation</th><td>${emp.jobTitle}</td></tr>
+            <tr><th>Bank Branch</th><td>Headquarters</td><th>Disbursal Date</th><td>31 Oct 2026</td></tr>
+          </table>
+          <table>
+            <thead>
+              <tr><th>Earnings</th><th>Amount (PKR)</th><th>Deductions</th><th>Amount (PKR)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Basic Salary</td><td>PKR ${(pay.basicSalary || 320000).toLocaleString()}</td><td>Income Tax</td><td>PKR ${(pay.taxDeductions || 12000).toLocaleString()}</td></tr>
+              <tr><td>House Rent & Utility</td><td>PKR ${((pay.grossSalary || 368000) - (pay.basicSalary || 320000)).toLocaleString()}</td><td>Loan Installment</td><td>PKR ${(pay.loanInstallmentDeduction || 0).toLocaleString()}</td></tr>
+              <tr class="net-pay"><td colspan="2">NET TAKE HOME SALARY</td><td colspan="2">PKR ${(pay.netSalary || 356000).toLocaleString()}</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 30px;">This is a computer-generated salary slip and requires no physical signature.</p>
+          <div style="text-align: center;"><button class="btn-print" onclick="window.print()">Print / Save as PDF</button></div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      showToast('Salary Slip generated successfully', 'success');
+    }
+
     function downloadEmployeeReportPdf() {
       const employeeId = document.getElementById('reportEmployeeSelect').value;
       const period = document.getElementById('reportPeriodSelect').value;
@@ -3235,9 +3409,77 @@
       const to = document.getElementById('reportToDate').value;
       if (!employeeId) return;
 
-      const url = `/api/v1/hrms/reports/employee/${employeeId}/pdf?period=${period}&from=${from}&to=${to}`;
-      window.open(url, '_blank');
-      showToast('Downloading employee report PDF...', 'info');
+      const emp = demoEmployees.find(e => e.id === employeeId) || demoEmployees[0];
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('Please allow popups to view and print Report', 'warning');
+        return;
+      }
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Attendance Report - ${emp.fullName} (${period})</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #1e293b; max-width: 800px; margin: auto; }
+            .header { border-bottom: 2px solid #0F9D91; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+            .title { font-size: 20px; font-weight: bold; color: #0F9D91; }
+            .meta { font-size: 12px; color: #64748b; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            th, td { padding: 8px 12px; border: 1px solid #e2e8f0; font-size: 12px; }
+            th { background: #f8fafc; text-align: left; font-weight: 600; }
+            .badge { padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+            .badge-present { background: #dcfce7; color: #166534; }
+            .badge-late { background: #fef3c7; color: #92400e; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 15px 0; }
+            .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
+            .stat-val { font-size: 20px; font-weight: bold; color: #0F9D91; }
+            .btn-print { background: #0F9D91; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+            @media print { .btn-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="title">ATTENDANCE LOG SYSTEM (ALS)</div>
+              <div class="meta">Comprehensive Employee Attendance & Punctuality Audit Report</div>
+            </div>
+            <div style="text-align: right;">
+              <strong>Period: ${period}</strong><br>
+              <span class="meta">${from} &rarr; ${to}</span>
+            </div>
+          </div>
+          <table>
+            <tr><th>Employee Name</th><td>${emp.fullName}</td><th>Employee ID</th><td>${emp.employeeCode}</td></tr>
+            <tr><th>Department</th><td>${emp.department}</td><th>Designation</th><td>${emp.jobTitle}</td></tr>
+            <tr><th>Branch Location</th><td>Headquarters</td><th>Status</th><td>Active Workforce</td></tr>
+          </table>
+          <div class="stats-grid">
+            <div class="stat-card"><div>Working Days</div><div class="stat-val">15</div></div>
+            <div class="stat-card"><div>Present Days</div><div class="stat-val" style="color: #16A34A;">14</div></div>
+            <div class="stat-card"><div>Late Arrivals</div><div class="stat-val" style="color: #F59E0B;">1</div></div>
+            <div class="stat-card"><div>Attendance Rate</div><div class="stat-val">93.3%</div></div>
+          </div>
+          <h4 style="margin-top: 25px; margin-bottom: 10px; font-size: 13px; text-transform: uppercase;">Punctuality Audit Log</h4>
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Day</th><th>Check-In</th><th>Check-Out</th><th>Status</th><th>Variance</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2026-11-19</td><td>Thursday</td><td>09:05 AM</td><td>05:15 PM</td><td><span class="badge badge-present">Present</span></td><td>+5m</td></tr>
+              <tr><td>2026-11-18</td><td>Wednesday</td><td>08:58 AM</td><td>05:08 PM</td><td><span class="badge badge-present">Present</span></td><td>-2m</td></tr>
+              <tr><td>2026-11-17</td><td>Tuesday</td><td>09:42 AM</td><td>05:30 PM</td><td><span class="badge badge-late">Late</span></td><td>+42m</td></tr>
+              <tr><td>2026-11-16</td><td>Monday</td><td>08:55 AM</td><td>05:00 PM</td><td><span class="badge badge-present">Present</span></td><td>-5m</td></tr>
+              <tr><td>2026-11-13</td><td>Friday</td><td>08:50 AM</td><td>05:10 PM</td><td><span class="badge badge-present">Present</span></td><td>-10m</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 30px;">Certified Official Digital Report - Attendance Log System (ALS)</p>
+          <div style="text-align: center;"><button class="btn-print" onclick="window.print()">Print / Save as PDF</button></div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      showToast('Official Employee Report PDF generated', 'success');
     }
 
 
