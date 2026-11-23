@@ -148,7 +148,7 @@
             <div class="text-[10px] text-teal-400 font-medium truncate">Lead Product Architect</div>
           </div>
         </div>
-        <a href="/app" target="_blank" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition" title="Open Mobile App Simulator">
+        <a href="./app.html" target="_blank" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition" title="Open Mobile App Simulator">
           <i class="fa-solid fa-mobile-screen text-xs"></i>
         </a>
       </div>
@@ -194,7 +194,7 @@
           </button>
 
           <!-- Launch Mobile Simulator Button -->
-          <a href="/app" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#0F9D91] to-teal-600 hover:from-teal-700 hover:to-teal-800 text-white text-xs font-bold transition shadow-sm shadow-[#0F9D91]/20 active:scale-95">
+          <a href="./app.html" target="_blank" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#0F9D91] to-teal-600 hover:from-teal-700 hover:to-teal-800 text-white text-xs font-bold transition shadow-sm shadow-[#0F9D91]/20 active:scale-95">
             <i class="fa-solid fa-mobile-screen"></i>
             <span>Mobile App</span>
           </a>
@@ -1463,18 +1463,18 @@
             pendingLoanApplications: 1,
             totalMonthlyPayroll: 2840000,
             monthlyAttendanceTrends: [
-              { month: 'Jun', attendanceRate: 94 },
-              { month: 'Jul', attendanceRate: 96 },
-              { month: 'Aug', attendanceRate: 91 },
-              { month: 'Sep', attendanceRate: 95 },
-              { month: 'Oct', attendanceRate: 93 },
-              { month: 'Nov', attendanceRate: 95 }
+              { month: 'Jun', presentAvg: 90, lateAvg: 6, absentAvg: 4 },
+              { month: 'Jul', presentAvg: 93, lateAvg: 4, absentAvg: 3 },
+              { month: 'Aug', presentAvg: 89, lateAvg: 6, absentAvg: 5 },
+              { month: 'Sep', presentAvg: 94, lateAvg: 3, absentAvg: 3 },
+              { month: 'Oct', presentAvg: 91, lateAvg: 5, absentAvg: 4 },
+              { month: 'Nov', presentAvg: 92, lateAvg: 5, absentAvg: 3 }
             ],
             departmentAttendance: [
-              { department: 'Product Design & UX', present: 1, total: 3 },
-              { department: 'Technology & Engineering', present: 3, total: 5 },
-              { department: 'Human Resources', present: 1, total: 1 },
-              { department: 'Operations & Logistics', present: 0, total: 1 }
+              { department: 'Product Design & UX', present: 1, total: 3, late: 0, presentRate: 33 },
+              { department: 'Technology & Engineering', present: 3, total: 5, late: 1, presentRate: 60 },
+              { department: 'Human Resources', present: 1, total: 1, late: 0, presentRate: 100 },
+              { department: 'Operations & Logistics', present: 0, total: 1, late: 0, presentRate: 0 }
             ],
             upcomingHolidays: [
               { title: 'Quaid-e-Azam Day', date: '2026-12-25', daysLeft: '35 days' },
@@ -2272,20 +2272,23 @@
       if (!trends || !trends.length) return;
 
       trends.forEach(t => {
-        const total = t.presentAvg + t.absentAvg + t.lateAvg || 1;
-        const presentH = Math.round((t.presentAvg / total) * 120);
-        const lateH = Math.round((t.lateAvg / total) * 120);
-        const absentH = Math.round((t.absentAvg / total) * 120);
+        const p = typeof t.presentAvg === 'number' ? t.presentAvg : (t.attendanceRate || 92);
+        const l = typeof t.lateAvg === 'number' ? t.lateAvg : 4;
+        const a = typeof t.absentAvg === 'number' ? t.absentAvg : Math.max(2, 100 - p - l);
+        const total = p + l + a || 100;
+        const presentH = Math.max(12, Math.round((p / total) * 125));
+        const lateH = Math.max(6, Math.round((l / total) * 125));
+        const absentH = Math.max(6, Math.round((a / total) * 125));
 
         const col = document.createElement('div');
-        col.className = 'flex-1 flex flex-col items-center gap-1.5 h-full justify-end';
+        col.className = 'flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer';
         col.innerHTML = `
-          <div class="w-full max-w-[38px] flex flex-col justify-end gap-0.5 rounded-lg overflow-hidden bg-slate-100 p-0.5">
-            <div style="height: ${absentH}px" class="bg-[#DC2626] rounded-xs transition-all duration-300" title="Absent: ${t.absentAvg}"></div>
-            <div style="height: ${lateH}px" class="bg-[#F59E0B] rounded-xs transition-all duration-300" title="Late: ${t.lateAvg}"></div>
-            <div style="height: ${presentH}px" class="bg-[#16A34A] rounded-xs transition-all duration-300" title="Present: ${t.presentAvg}"></div>
+          <div class="w-full max-w-[38px] flex flex-col justify-end gap-0.5 rounded-lg overflow-hidden bg-slate-100 p-0.5 group-hover:bg-slate-200 transition-colors" title="${t.month}: Present ${p}%, Late ${l}%, Absent ${a}%">
+            <div style="height: ${absentH}px" class="bg-[#DC2626] rounded-xs transition-all duration-300" title="Absent: ${a}%"></div>
+            <div style="height: ${lateH}px" class="bg-[#F59E0B] rounded-xs transition-all duration-300" title="Late: ${l}%"></div>
+            <div style="height: ${presentH}px" class="bg-[#16A34A] rounded-xs transition-all duration-300" title="Present: ${p}%"></div>
           </div>
-          <span class="text-[10px] font-bold text-slate-500 uppercase">${t.month.slice(0, 3)}</span>
+          <span class="text-[10px] font-bold text-slate-500 uppercase group-hover:text-slate-800 transition-colors">${(t.month || '').slice(0, 3)}</span>
         `;
         container.appendChild(col);
       });
@@ -2297,16 +2300,22 @@
       if (!deptList || !deptList.length) return;
 
       deptList.forEach(dept => {
+        const total = dept.total || 1;
+        const present = dept.present || 0;
+        const late = dept.late || 0;
+        const rate = typeof dept.presentRate === 'number' ? dept.presentRate : Math.round((present / total) * 100);
+        const lateRate = Math.round((late / total) * 100);
+
         const div = document.createElement('div');
         div.className = 'space-y-1';
         div.innerHTML = `
           <div class="flex items-center justify-between text-xs font-semibold">
             <span class="text-slate-700 truncate">${dept.department}</span>
-            <span class="text-slate-800 mono-num">${dept.present}/${dept.total} <span class="text-[10px] text-slate-400">(${dept.presentRate}%)</span></span>
+            <span class="text-slate-800 mono-num">${present}/${total} <span class="text-[10px] text-slate-400">(${rate}%)</span></span>
           </div>
           <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
-            <div style="width: ${dept.presentRate}%" class="bg-[#0F9D91] h-full"></div>
-            <div style="width: ${Math.round((dept.late / (dept.total || 1)) * 100)}%" class="bg-amber-400 h-full"></div>
+            <div style="width: ${rate}%" class="bg-[#0F9D91] h-full"></div>
+            <div style="width: ${lateRate}%" class="bg-amber-400 h-full"></div>
           </div>
         `;
         container.appendChild(div);
