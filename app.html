@@ -218,7 +218,12 @@
               <i class="fa-solid fa-bars"></i>
             </button>
             <h1 class="text-xl font-bold text-theme-primary">Home</h1>
-            <div class="flex items-center gap-4 text-theme-primary">
+            <div class="flex items-center gap-2.5 text-theme-primary">
+              <!-- Admin / Read-Only Badge -->
+              <button onclick="openMobileAdminUnlockModal()" id="mobileAdminBadge" class="flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-800 text-[10px] font-bold" title="Read-Only Demo - Click to unlock">
+                <i class="fa-solid fa-lock text-[9px]"></i>
+                <span id="mobileAdminBadgeText">Read-Only</span>
+              </button>
               <!-- Palette Icon for Theme Change -->
               <button onclick="toggleThemePicker(true)" class="hover:opacity-80 p-1 transition" title="Change Theme Color">
                 <i class="fa-solid fa-palette text-base"></i>
@@ -1330,6 +1335,76 @@
           </div>
         </div>
 
+        <!-- POPUP: Mobile Admin Access Unlock Modal -->
+        <div id="mobileAdminUnlockModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div class="bg-white text-slate-800 rounded-3xl w-full max-w-xs p-5 shadow-2xl space-y-3">
+            
+            <div class="flex items-center justify-between border-b pb-2 border-slate-200">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-bold text-slate-800">Showcase Protection</h3>
+                  <p class="text-[10px] text-slate-500">Read-Only Demo Mode</p>
+                </div>
+              </div>
+              <button onclick="closeMobileAdminUnlockModal()" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <!-- Content State: Locked -->
+            <div id="mobileUnlockStateLocked" class="space-y-2.5">
+              <p class="text-[11px] text-slate-600 leading-snug" id="mobileUnlockNoticeText">
+                Attendance punch is disabled in <strong>Read-Only Showcase Mode</strong> for portfolio visitors.
+              </p>
+
+              <div id="mobileUnlockErrorMessage" class="hidden p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-semibold text-center">
+                Invalid Admin Passkey. Please try again.
+              </div>
+
+              <div>
+                <label class="block text-[10px] font-bold text-slate-700 mb-1">Enter Master Passkey to Unlock:</label>
+                <div class="relative">
+                  <input type="password" id="inputMobileAdminPasskey" placeholder="Enter passkey" onkeydown="if(event.key==='Enter') submitMobileAdminPasskey()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-[#0F9D91]" />
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-1.5 pt-1">
+                <button type="button" onclick="closeMobileAdminUnlockModal()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">
+                  Cancel
+                </button>
+                <button type="button" onclick="submitMobileAdminPasskey()" class="px-3.5 py-1.5 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-unlock text-[10px]"></i>
+                  <span>Unlock</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content State: Unlocked -->
+            <div id="mobileUnlockStateUnlocked" class="hidden space-y-2.5 text-xs">
+              <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-medium space-y-0.5">
+                <div class="font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                  <span>Admin Full Access Active</span>
+                </div>
+                <p class="text-[10px] text-emerald-700">Punch verification & settings are fully enabled.</p>
+              </div>
+
+              <div class="flex items-center justify-end gap-2 pt-1">
+                <button type="button" onclick="lockMobileAdminMode()" class="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-[11px] font-bold">
+                  Switch to Read-Only
+                </button>
+                <button type="button" onclick="closeMobileAdminUnlockModal()" class="px-3.5 py-1.5 bg-[#142B49] text-white rounded-xl text-[11px] font-bold">
+                  Done
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- POPUP 5: Enhanced Color Theme & Customizer Modal (Task 2) -->
         <div id="themePickerModal" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
           <div class="bg-white text-slate-800 rounded-3xl w-full max-w-sm p-4 shadow-2xl space-y-3 max-h-[90%] flex flex-col">
@@ -1463,6 +1538,96 @@
 
   <!-- Mobile Client Simulator Script with Bottom Menus & Theme Engine -->
   <script>
+    // =========================================================================
+    // ACCESS CONTROL & READ-ONLY SHOWCASE ENGINE (Passkey: Sajjad123!)
+    // =========================================================================
+    const ADMIN_PASSKEY = 'Sajjad123!';
+    const STORAGE_KEY_ADMIN = 'als_admin_unlocked';
+
+    function isAdminUnlocked() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('admin') === ADMIN_PASSKEY || params.get('key') === ADMIN_PASSKEY) {
+          localStorage.setItem(STORAGE_KEY_ADMIN, 'true');
+          return true;
+        }
+        return localStorage.getItem(STORAGE_KEY_ADMIN) === 'true';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function openMobileAdminUnlockModal(notice) {
+      const modal = document.getElementById('mobileAdminUnlockModal');
+      if (!modal) return;
+      const isUnlocked = isAdminUnlocked();
+      document.getElementById('mobileUnlockStateLocked')?.classList.toggle('hidden', isUnlocked);
+      document.getElementById('mobileUnlockStateUnlocked')?.classList.toggle('hidden', !isUnlocked);
+      
+      const errBox = document.getElementById('mobileUnlockErrorMessage');
+      if (errBox) errBox.classList.add('hidden');
+
+      const noticeEl = document.getElementById('mobileUnlockNoticeText');
+      if (noticeEl) {
+        if (notice) {
+          noticeEl.innerHTML = `<span class="text-amber-800 font-bold">${notice}</span><br><span class="text-slate-500 text-[10px] block mt-1">Enter Master Passkey to unlock full write permissions:</span>`;
+        } else {
+          noticeEl.innerHTML = `Attendance punch recording is disabled in <strong>Read-Only Showcase Mode</strong> for portfolio visitors.`;
+        }
+      }
+
+      const input = document.getElementById('inputMobileAdminPasskey');
+      if (input) input.value = '';
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeMobileAdminUnlockModal() {
+      document.getElementById('mobileAdminUnlockModal')?.classList.add('hidden');
+    }
+
+    function submitMobileAdminPasskey() {
+      const input = document.getElementById('inputMobileAdminPasskey');
+      const val = (input?.value || '').trim();
+      const errBox = document.getElementById('mobileUnlockErrorMessage');
+
+      if (val === ADMIN_PASSKEY) {
+        localStorage.setItem(STORAGE_KEY_ADMIN, 'true');
+        updateMobileAdminUI();
+        if (errBox) errBox.classList.add('hidden');
+        closeMobileAdminUnlockModal();
+        showPunchToast('Admin Mode Unlocked', new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()), 'Full punching and settings access granted.');
+      } else {
+        if (errBox) {
+          errBox.innerText = 'Incorrect passkey. Please try again.';
+          errBox.classList.remove('hidden');
+        }
+      }
+    }
+
+    function lockMobileAdminMode() {
+      localStorage.removeItem(STORAGE_KEY_ADMIN);
+      updateMobileAdminUI();
+      closeMobileAdminUnlockModal();
+      showPunchToast('Read-Only Mode', new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()), 'Switched to Read-Only Demo.');
+    }
+
+    function updateMobileAdminUI() {
+      const isUnlocked = isAdminUnlocked();
+      const badge = document.getElementById('mobileAdminBadge');
+      if (badge) {
+        if (isUnlocked) {
+          badge.className = 'flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 text-[10px] font-bold';
+          badge.innerHTML = '<i class="fa-solid fa-shield-halved text-[9px]"></i><span>Admin</span>';
+          badge.title = 'Admin Mode Active - Click to lock';
+        } else {
+          badge.className = 'flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-200 bg-amber-50 text-amber-800 text-[10px] font-bold';
+          badge.innerHTML = '<i class="fa-solid fa-lock text-[9px]"></i><span>Read-Only</span>';
+          badge.title = 'Read-Only Demo - Click to unlock';
+        }
+      }
+    }
+
     const API_BASE = window.location.origin;
     let offlineQueue = [];
     let isOffline = false;
@@ -2786,6 +2951,10 @@
     // Perform Check-In or Check-Out Punch
     async function mobileCheckIn(punchType) {
       closeBottomMenu();
+      if (!isAdminUnlocked()) {
+        openMobileAdminUnlockModal(`Attendance punch (${punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'}) is disabled in Read-Only Showcase Mode for visitors.`);
+        return;
+      }
       const activeUser = getActiveMobileUser();
       if (!activeUser) {
         alert('Please sign in with your Employee ID first.');
@@ -4171,6 +4340,16 @@
       }
 
       renderCuratedThemes();
+
+      // Update mobile admin mode UI
+      updateMobileAdminUI();
+
+      // Listen for admin mode changes across tabs
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY_ADMIN) {
+          updateMobileAdminUI();
+        }
+      });
 
       // Check authenticated user session
       const active = getActiveMobileUser();
