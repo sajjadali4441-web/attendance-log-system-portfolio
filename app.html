@@ -108,6 +108,122 @@
       <!-- Mobile App Viewport (Inside the Phone) -->
       <div id="mobileAppViewport" class="w-full h-full flex flex-col bg-[#e6f4f8] text-slate-800 relative overflow-hidden transition-colors duration-300">
 
+        <!-- In-App Verified Punch Toast Notification -->
+        <div id="mobilePunchToast" class="hidden absolute top-12 left-3 right-3 z-50 bg-slate-900/95 border border-emerald-500/80 text-white rounded-2xl p-3 shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in fade-in slide-in-from-top-3 duration-200">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+            <i class="fa-solid fa-circle-check text-xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-white flex items-center justify-between">
+              <span id="mobileToastTitle">Check-In Verified</span>
+              <span id="mobileToastTime" class="text-[10px] text-emerald-400 font-mono">09:30 AM</span>
+            </div>
+            <div id="mobileToastDesc" class="text-[11px] text-slate-300 truncate mt-0.5">Headquarters Geofence (12m)</div>
+          </div>
+        </div>
+
+        <!-- ==================================================================== -->
+        <!-- SCREEN 0: LOGIN & AUTHENTICATION SCREEN VIEW -->
+        <!-- ==================================================================== -->
+        <div id="loginScreenView" class="w-full h-full flex flex-col relative overflow-y-auto no-scrollbar bg-gradient-to-b from-[#091b26] via-[#0d2a3a] to-[#06141d] text-white p-5 select-none z-50">
+          
+          <!-- Top StatusBar & Shield -->
+          <div class="flex items-center justify-between text-[11px] text-teal-400 font-semibold pt-6 pb-2">
+            <div class="flex items-center gap-1.5">
+              <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i>
+              <span>GEOFENCE PERIMETER ACTIVE</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-teal-950/80 border border-teal-700/60 px-2.5 py-0.5 rounded-full text-[10px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="text-teal-200">v1.0.4 SECURE</span>
+            </div>
+          </div>
+
+          <!-- Logo & Brand Title -->
+          <div class="flex flex-col items-center text-center my-auto py-2">
+            <div class="w-18 h-18 rounded-3xl bg-gradient-to-tr from-[#0F9D91] to-[#142B49] p-0.5 shadow-xl shadow-teal-950/60 flex items-center justify-center mb-2.5 relative">
+              <div class="w-full h-full bg-[#0a1e29]/90 rounded-[22px] flex items-center justify-center backdrop-blur-xs">
+                <i class="fa-solid fa-fingerprint text-3xl text-teal-300"></i>
+              </div>
+              <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shadow">
+                <i class="fa-solid fa-check"></i>
+              </div>
+            </div>
+            <h2 class="text-xl font-black tracking-tight text-white">ALS Mobile Attendance</h2>
+            <p class="text-[11px] text-teal-200/80 mt-0.5 max-w-[240px]">Workforce Geofence & Check-In Portal</p>
+          </div>
+
+          <!-- Quick 1-Click Employee Switcher -->
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-3 my-2 backdrop-blur-md">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-teal-300 flex items-center gap-1">
+                <i class="fa-solid fa-bolt text-amber-400"></i> Quick Select Employee
+              </span>
+              <span class="text-[9px] text-teal-200/70 font-semibold">Live Synced</span>
+            </div>
+            <select id="loginQuickSelect" onchange="onQuickSelectEmployee(this.value)" class="w-full bg-[#091b26] border border-teal-600/50 rounded-xl px-2.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-teal-400">
+              <option value="">-- Choose Corporate Employee --</option>
+            </select>
+          </div>
+
+          <!-- Login Form -->
+          <form id="mobileLoginForm" onsubmit="handleMobileLogin(event)" class="space-y-2.5 my-auto">
+            <div id="loginErrorMessage" class="hidden p-2 rounded-xl bg-rose-500/25 border border-rose-500/50 text-rose-200 text-xs font-semibold text-center">
+            </div>
+
+            <!-- Employee ID / Email -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Employee ID or Email</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <i class="fa-solid fa-id-badge text-xs"></i>
+                </span>
+                <input type="text" id="loginUsername" required placeholder="e.g. TC-1002 or ahmed.khan" class="w-full bg-white/5 border border-white/15 focus:border-teal-400 focus:bg-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 font-semibold focus:outline-none transition" />
+              </div>
+            </div>
+
+            <!-- Password / Security PIN -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-[11px] font-bold text-slate-300">Password / PIN</label>
+                <span class="text-[10px] text-slate-400">Default: <strong class="text-teal-300 font-mono">123456</strong></span>
+              </div>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input type="password" id="loginPassword" value="123456" required placeholder="Enter PIN (123456)" class="w-full bg-white/5 border border-white/15 focus:border-teal-400 focus:bg-white/10 rounded-xl pl-9 pr-9 py-2 text-xs text-white placeholder-slate-500 font-semibold focus:outline-none transition" />
+                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
+                  <i id="passwordToggleIcon" class="fa-solid fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sign In Button -->
+            <button type="submit" id="btnMobileLogin" class="w-full py-2.5 bg-gradient-to-r from-[#0F9D91] to-teal-600 hover:from-teal-600 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-950/60 flex items-center justify-center gap-2 active:scale-95 transition mt-2">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Sign In & Verify Location</span>
+            </button>
+          </form>
+
+          <!-- Quick Fingerprint Biometric Auth Button -->
+          <div class="pt-2 text-center">
+            <button type="button" onclick="quickBiometricLogin()" class="group inline-flex flex-col items-center gap-1 text-slate-400 hover:text-teal-300 transition">
+              <div class="w-11 h-11 rounded-full border border-teal-500/40 bg-teal-950/50 flex items-center justify-center group-hover:border-teal-400 group-hover:bg-teal-900/50 transition">
+                <i class="fa-solid fa-fingerprint text-lg text-teal-400 group-hover:scale-110 transition"></i>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400">One-Tap Biometric Login</span>
+            </button>
+          </div>
+
+          <!-- Bottom Footer Notice -->
+          <div class="text-center pt-2 border-t border-white/10">
+            <p class="text-[10px] text-slate-400 leading-relaxed">
+              Added a new employee in Admin Portal? Pick them above or type their ID & default PIN (<code class="text-teal-300">123456</code>).
+            </p>
+          </div>
+        </div>
+
         <!-- ==================================================================== -->
         <!-- SCREEN 1: HOME SCREEN VIEW (Pic1.jpeg) -->
         <!-- ==================================================================== -->
@@ -124,8 +240,8 @@
               <button onclick="toggleThemePicker(true)" class="hover:opacity-80 p-1 transition" title="Change Theme Color">
                 <i class="fa-solid fa-palette text-base"></i>
               </button>
-              <button onclick="toggleLockModal(true)" class="hover:opacity-80 p-1 transition" title="Session Lock">
-                <i class="fa-solid fa-lock text-base"></i>
+              <button onclick="mobileLogout()" class="hover:opacity-80 p-1 transition" title="Logout / Switch User">
+                <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
               </button>
             </div>
           </div>
@@ -279,8 +395,8 @@
                   
                   <!-- Check-In Timestamp rendered directly below Check-In circle -->
                   <div class="mt-2.5 min-h-[26px] flex items-center justify-center">
-                    <span id="lastCheckInDisplay" class="text-xs font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200 shadow-sm transition">
-                      09:54 AM
+                    <span id="lastCheckInDisplay" class="hidden text-xs font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200 shadow-sm transition">
+                      --:--
                     </span>
                   </div>
                 </div>
@@ -1063,7 +1179,7 @@
               <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Username</label>
               <div class="flex items-center gap-2 pt-1">
                 <i class="fa-solid fa-user text-slate-400 text-xs"></i>
-                <span class="text-xs font-bold text-theme-primary">Sajjad Ali</span>
+                <span class="text-xs font-bold text-theme-primary" id="modalProfileName">Sajjad Ali</span>
               </div>
             </div>
 
@@ -1072,7 +1188,7 @@
               <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">Designation</label>
               <div class="flex items-center gap-2 pt-1">
                 <i class="fa-solid fa-award text-slate-400 text-xs"></i>
-                <span class="text-xs font-bold text-theme-primary">Senior Product Designer</span>
+                <span class="text-xs font-bold text-theme-primary" id="modalProfileTitle">Senior Product Designer</span>
               </div>
             </div>
 
@@ -1081,7 +1197,7 @@
               <label class="absolute -top-2.5 left-3 px-1 bg-white text-[10px] text-slate-500 font-semibold">User ID</label>
               <div class="flex items-center gap-2 pt-1">
                 <i class="fa-solid fa-id-card text-slate-400 text-xs"></i>
-                <span class="text-xs font-bold text-theme-primary">ID: AK-8924</span>
+                <span class="text-xs font-bold text-theme-primary" id="modalProfileCode">ID: AK-8924</span>
               </div>
             </div>
 
@@ -1106,7 +1222,11 @@
               </button>
             </div>
 
-            <div class="text-right pt-2">
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <button onclick="toggleProfileModal(false); mobileLogout();" class="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Logout / Switch User</span>
+              </button>
               <button onclick="toggleProfileModal(false)" class="text-sm font-bold text-theme-primary hover:opacity-80">
                 Close
               </button>
@@ -1166,9 +1286,9 @@
               </div>
 
               <!-- Logout -->
-              <div onclick="alert('Session logged out successfully.')" class="pt-4 border-t border-slate-100 flex items-center gap-3 text-rose-500 hover:text-rose-700 cursor-pointer">
+              <div onclick="mobileLogout()" class="pt-4 border-t border-slate-100 flex items-center gap-3 text-rose-500 hover:text-rose-700 cursor-pointer">
                 <i class="fa-solid fa-arrow-right-from-bracket text-sm w-4"></i>
-                <span class="font-bold">Logout</span>
+                <span class="font-bold">Logout / Switch User</span>
               </div>
             </div>
 
@@ -1376,6 +1496,331 @@
     let offlineQueue = [];
     let isOffline = false;
     let activeBottomTab = null;
+
+    // =========================================================================
+    // SHARED PERSISTENCE & GITHUB PAGES MOCK API ENGINE
+    // =========================================================================
+    const STORAGE_KEY_EMPLOYEES = 'als_shared_employees';
+    const STORAGE_KEY_PUNCHES = 'als_shared_punches';
+    const STORAGE_KEY_ACTIVE_USER = 'als_mobile_active_user';
+
+    const defaultDemoEmployees = [
+      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 8472911', basicSalary: 320000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: '05:15 PM', password: '123' },
+      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 321 4455667', basicSalary: 350000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: '05:10 PM', password: '123' },
+      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 333 5566778', basicSalary: 280000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 301 6677889', basicSalary: 260000, employmentStatus: 'ACTIVE', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 345 7788990', basicSalary: 240000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 1122334', basicSalary: 220000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave', password: '123' },
+      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 312 2233445', basicSalary: 340000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave', password: '123' },
+      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 334 3344556', basicSalary: 210000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null, password: '123' },
+      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 9988776', basicSalary: 160000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null, password: '123' },
+      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 322 8877665', basicSalary: 190000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null, password: '123' }
+    ];
+
+    function getSharedEmployees() {
+      const raw = localStorage.getItem(STORAGE_KEY_EMPLOYEES);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch(e) {}
+      }
+      localStorage.setItem(STORAGE_KEY_EMPLOYEES, JSON.stringify(defaultDemoEmployees));
+      return [...defaultDemoEmployees];
+    }
+
+    function saveSharedEmployees(list) {
+      localStorage.setItem(STORAGE_KEY_EMPLOYEES, JSON.stringify(list));
+    }
+
+    function getSharedPunches() {
+      const raw = localStorage.getItem(STORAGE_KEY_PUNCHES);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        } catch(e) {}
+      }
+      return [];
+    }
+
+    function saveSharedPunches(list) {
+      localStorage.setItem(STORAGE_KEY_PUNCHES, JSON.stringify(list));
+    }
+
+    function getActiveMobileUser() {
+      const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_USER);
+      if (raw) {
+        try {
+          return JSON.parse(raw);
+        } catch(e) {}
+      }
+      return null;
+    }
+
+    function setActiveMobileUser(user) {
+      if (user) {
+        localStorage.setItem(STORAGE_KEY_ACTIVE_USER, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(STORAGE_KEY_ACTIVE_USER);
+      }
+    }
+
+    function playSuccessChime() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch(e) {}
+    }
+
+    function showPunchToast(title, time, desc) {
+      const toast = document.getElementById('mobilePunchToast');
+      if (!toast) {
+        alert(`${title} at ${time}!\n${desc}`);
+        return;
+      }
+      document.getElementById('mobileToastTitle').innerText = title;
+      document.getElementById('mobileToastTime').innerText = time;
+      document.getElementById('mobileToastDesc').innerText = desc;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+
+    function populateQuickSelectEmployees() {
+      const select = document.getElementById('loginQuickSelect');
+      if (!select) return;
+      const employees = getSharedEmployees();
+      select.innerHTML = '<option value="">-- Choose Corporate Employee --</option>';
+      employees.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = emp.employeeCode || emp.id;
+        opt.innerText = `${emp.fullName} (${emp.employeeCode}) - ${emp.jobTitle || emp.department}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function onQuickSelectEmployee(val) {
+      if (!val) return;
+      const employees = getSharedEmployees();
+      const emp = employees.find(e => e.employeeCode === val || e.id === val);
+      if (emp) {
+        document.getElementById('loginUsername').value = emp.employeeCode;
+        document.getElementById('loginPassword').value = emp.password || '123456';
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('loginPassword');
+      const icon = document.getElementById('passwordToggleIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash text-xs';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye text-xs';
+      }
+    }
+
+    function handleMobileLogin(e) {
+      if (e) e.preventDefault();
+      const username = (document.getElementById('loginUsername')?.value || '').trim().toLowerCase();
+      const password = (document.getElementById('loginPassword')?.value || '').trim();
+      const errBox = document.getElementById('loginErrorMessage');
+      if (errBox) errBox.classList.add('hidden');
+
+      const employees = getSharedEmployees();
+      const emp = employees.find(e => 
+        (e.employeeCode && e.employeeCode.toLowerCase() === username) ||
+        (e.email && e.email.toLowerCase() === username) ||
+        (e.id && e.id.toLowerCase() === username) ||
+        (e.fullName && e.fullName.toLowerCase() === username)
+      );
+
+      if (!emp) {
+        if (errBox) {
+          errBox.innerText = 'Employee not found. Please verify Employee Code/Email or register from Admin Portal.';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const validPass = emp.password || '123456';
+      if (password && password !== validPass && password !== '123456' && password !== '123') {
+        if (errBox) {
+          errBox.innerText = 'Invalid password or PIN. (Default PIN: 123456)';
+          errBox.classList.remove('hidden');
+        }
+        return;
+      }
+
+      setActiveMobileUser(emp);
+      showAppForUser(emp);
+    }
+
+    function quickBiometricLogin() {
+      const employees = getSharedEmployees();
+      const active = getActiveMobileUser() || employees[0];
+      setActiveMobileUser(active);
+      showAppForUser(active);
+      playSuccessChime();
+      showPunchToast('Biometric Login Verified', new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()), `Authenticated as ${active.fullName} (${active.employeeCode})`);
+    }
+
+    function mobileLogout() {
+      setActiveMobileUser(null);
+      lastCheckInTime = null;
+      lastCheckOutTime = null;
+      document.querySelectorAll('[id$="ScreenView"]').forEach(v => v.classList.add('hidden'));
+      document.getElementById('loginScreenView')?.classList.remove('hidden');
+      document.getElementById('bottomNavBar')?.classList.add('hidden');
+      document.getElementById('sidebarDrawer')?.classList.add('hidden');
+      populateQuickSelectEmployees();
+    }
+
+    function showAppForUser(emp) {
+      document.getElementById('loginScreenView')?.classList.add('hidden');
+      document.getElementById('homeScreenView')?.classList.remove('hidden');
+      document.getElementById('bottomNavBar')?.classList.remove('hidden');
+
+      // Update header profile
+      const nameEl = document.getElementById('profileNameDisplay');
+      if (nameEl) nameEl.innerText = emp.fullName;
+      const titleEl = document.getElementById('profileTitleDisplay');
+      if (titleEl) titleEl.innerText = emp.jobTitle || emp.department;
+      const idEl = document.getElementById('profileIdDisplay');
+      if (idEl) idEl.innerText = `ID: ${emp.employeeCode}`;
+
+      // Update profile modal
+      const mName = document.getElementById('modalProfileName');
+      if (mName) mName.innerText = emp.fullName;
+      const mTitle = document.getElementById('modalProfileTitle');
+      if (mTitle) mTitle.innerText = emp.jobTitle || emp.department;
+      const mCode = document.getElementById('modalProfileCode');
+      if (mCode) mCode.innerText = `ID: ${emp.employeeCode}`;
+
+      // Check today's punch status for this employee
+      const punches = getSharedPunches().filter(p => p.empId === emp.id || p.employeeCode === emp.employeeCode);
+      const todayDate = new Date().toISOString().split('T')[0];
+      const todayPunch = punches.find(p => p.date === todayDate || p.date === '2026-11-19');
+
+      lastCheckInTime = emp.checkInTime || (todayPunch && todayPunch.punchType === 'CHECK_IN' ? todayPunch.time : null);
+      lastCheckOutTime = emp.checkOutTime || (todayPunch && todayPunch.punchType === 'CHECK_OUT' ? todayPunch.time : null);
+
+      const cardPresent = document.getElementById('cardPresent');
+      const cardAbsent = document.getElementById('cardAbsent');
+      if (lastCheckInTime) {
+        if (cardPresent) cardPresent.innerText = '01';
+        if (cardAbsent) cardAbsent.innerText = '00';
+      } else {
+        if (cardPresent) cardPresent.innerText = '00';
+        if (cardAbsent) cardAbsent.innerText = '01';
+      }
+
+      renderPunchTimes();
+    }
+
+    // Intercept fetch requests on GitHub Pages to route to local shared state
+    const originalFetch = window.fetch;
+    window.fetch = async function(url, options) {
+      try {
+        const res = await originalFetch(url, options);
+        if (res.ok) return res;
+        throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        return mockMobileApiHandler(url, options);
+      }
+    };
+
+    function mockMobileApiHandler(url, options) {
+      const u = typeof url === 'string' ? url : url.toString();
+      let payload = { success: true };
+
+      if (u.includes('/api/v1/attendance/punch')) {
+        let body = {};
+        try { body = typeof options.body === 'string' ? JSON.parse(options.body) : (options.body || {}); } catch(e){}
+        payload = {
+          success: true,
+          message: `${body.punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} verified and accepted`,
+          distanceFromOfficeMeters: 12.4,
+          punchType: body.punchType || 'CHECK_IN',
+          timestamp: new Date().toISOString()
+        };
+      } else if (u.includes('/api/v1/attendance/summary')) {
+        payload = {
+          presentCount: lastCheckInTime ? 1 : 0,
+          absentCount: lastCheckInTime ? 0 : 1,
+          offDayCount: 0,
+          lopCount: 0,
+          leaveCount: 0,
+          outdoorCount: 0,
+          lastCheckInTime: lastCheckInTime || null,
+          lastCheckOutTime: lastCheckOutTime || null
+        };
+      } else if (u.includes('/api/v1/attendance/records')) {
+        payload = [
+          { date: '19-11-2026', checkIn: lastCheckInTime || '09:00 AM', checkOut: lastCheckOutTime || '—', status: lastCheckInTime ? 'Present' : 'Absent', hours: '8.2h' },
+          { date: '18-11-2026', checkIn: '08:58 AM', checkOut: '05:08 PM', status: 'Present', hours: '8.1h' },
+          { date: '17-11-2026', checkIn: '09:02 AM', checkOut: '05:20 PM', status: 'Present', hours: '8.3h' },
+          { date: '16-11-2026', checkIn: '08:55 AM', checkOut: '05:00 PM', status: 'Present', hours: '8.0h' }
+        ];
+      } else if (u.includes('/api/v1/attendance/rejections')) {
+        payload = [
+          { timestamp: '19 Nov 08:30 AM', reason: 'OUT_OF_GEOFENCE', distance: '940m outside authorized office perimeter' },
+          { timestamp: '17 Nov 09:12 AM', reason: 'MOCK_PROVIDER_DETECTED', distance: 'Mock GPS provider intercepted' }
+        ];
+      } else if (u.includes('/api/v1/attendance/roster')) {
+        payload = {
+          month: 'November 2026',
+          shifts: [
+            { day: 'Monday', shift: 'General Morning (09:00 AM - 05:00 PM)', branch: 'Headquarters' },
+            { day: 'Tuesday', shift: 'General Morning (09:00 AM - 05:00 PM)', branch: 'Headquarters' },
+            { day: 'Wednesday', shift: 'General Morning (09:00 AM - 05:00 PM)', branch: 'Headquarters' },
+            { day: 'Thursday', shift: 'General Morning (09:00 AM - 05:00 PM)', branch: 'Headquarters' },
+            { day: 'Friday', shift: 'General Morning (09:00 AM - 05:00 PM)', branch: 'Headquarters' }
+          ]
+        };
+      } else if (u.includes('/api/v1/attendance/location-shift-summary')) {
+        payload = {
+          date: '2026-11-19',
+          branch: 'Headquarters - Technology Campus',
+          shift: 'Morning Shift',
+          totalStaff: getSharedEmployees().length,
+          presentCount: getSharedEmployees().filter(e => e.status === 'PRESENT').length
+        };
+      } else if (u.includes('/api/v1/attendance/employees-summary')) {
+        payload = {
+          total: getSharedEmployees().length,
+          present: getSharedEmployees().filter(e => e.status === 'PRESENT').length,
+          late: getSharedEmployees().filter(e => e.status === 'LATE').length
+        };
+      } else if (u.includes('/api/v1/attendance/employees-records')) {
+        payload = getSharedEmployees().map(e => ({
+          name: e.fullName,
+          code: e.employeeCode,
+          department: e.department,
+          status: e.status,
+          checkIn: e.checkInTime || '—',
+          checkOut: e.checkOutTime || '—'
+        }));
+      }
+
+      return new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // ====================================================================
     // EXPANDED THEME SYSTEM & CUSTOM COLOR WHEEL ENGINE (Task 2)
@@ -2337,7 +2782,7 @@
     }
 
     // State for Check-In and Check-Out Timestamps
-    let lastCheckInTime = '09:54 AM';
+    let lastCheckInTime = null;
     let lastCheckOutTime = null;
 
     // Conditionally renders Check-In and Check-Out timestamps below their respective circles
@@ -2363,7 +2808,14 @@
     // Perform Check-In or Check-Out Punch
     async function mobileCheckIn(punchType) {
       closeBottomMenu();
-      const isCheckEnabled = document.getElementById('checkInOutToggle').checked;
+      const activeUser = getActiveMobileUser();
+      if (!activeUser) {
+        alert('Please sign in with your Employee ID first.');
+        mobileLogout();
+        return;
+      }
+
+      const isCheckEnabled = document.getElementById('checkInOutToggle') ? document.getElementById('checkInOutToggle').checked : true;
       if (!isCheckEnabled) {
         alert('Check In/Out is disabled in settings.');
         return;
@@ -2371,78 +2823,90 @@
 
       const presetEl = document.getElementById('gpsPreset');
       const preset = presetEl ? presetEl.value : 'INSIDE';
-      let payload = {
-        officeId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
-        punchType: punchType,
-        accuracyMeters: 6.4,
-        clientTimestamp: new Date().toISOString(),
-        deviceId: 'DEV-S23-ULTRA-SECURE-UUID-9042',
-        isMockProvider: false,
-        isRootedOrJailbroken: false
-      };
 
-      if (preset === 'INSIDE') {
-        payload.latitude = 28.613955;
-        payload.longitude = 77.209045; // 14m from center
+      if (preset === 'MOCK') {
+        alert('Punch Rejected!\nReason: MOCK_PROVIDER_DETECTED\nMock/Spoofed GPS location detected.');
+        return;
       } else if (preset === 'OUTSIDE') {
-        payload.latitude = 28.621000;
-        payload.longitude = 77.214500; // 940m away
-      } else if (preset === 'MOCK') {
-        payload.latitude = 28.613939;
-        payload.longitude = 77.209021;
-        payload.isMockProvider = true; // Fake GPS!
-      } else if (preset === 'UNREGISTERED') {
-        payload.latitude = 28.613939;
-        payload.longitude = 77.209021;
-        payload.deviceId = 'DEV-UNAUTHORIZED-FRIEND-PHONE-404'; // Buddy punch!
-      }
-
-      // If Offline, push to encrypted local queue
-      if (isOffline) {
-        const localId = 'off-' + Date.now();
-        offlineQueue.push({ ...payload, localId, offlineSignature: 'SIG-' + Math.random().toString(36) });
-        updatePendingBadge();
-        logConsole(`📦 Offline punch enqueued locally (${offlineQueue.length} pending).`);
-        alert('You are offline! Punch saved securely on device. It will automatically sync once connected.');
+        alert('Punch Rejected!\nReason: GEOFENCE_BREACH\nYou are 940m outside authorized office perimeter.');
         return;
       }
 
-      // Online: Call Backend REST API
+      const timeStr = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      // Update punch state
+      if (punchType === 'CHECK_IN') {
+        lastCheckInTime = timeStr;
+        activeUser.checkInTime = timeStr;
+        activeUser.status = 'PRESENT';
+        activeUser.statusLabel = 'Present';
+        activeUser.indicatorColor = 'green';
+        const cardPresent = document.getElementById('cardPresent');
+        const cardAbsent = document.getElementById('cardAbsent');
+        if (cardPresent) cardPresent.innerText = '01';
+        if (cardAbsent) cardAbsent.innerText = '00';
+      } else if (punchType === 'CHECK_OUT') {
+        lastCheckOutTime = timeStr;
+        activeUser.checkOutTime = timeStr;
+      }
+
+      // Save updated employee to shared localStorage
+      const employees = getSharedEmployees();
+      const idx = employees.findIndex(e => e.id === activeUser.id || e.employeeCode === activeUser.employeeCode);
+      if (idx !== -1) {
+        employees[idx] = { ...employees[idx], ...activeUser };
+        saveSharedEmployees(employees);
+      }
+      setActiveMobileUser(activeUser);
+
+      // Record in shared punches queue
+      const punches = getSharedPunches();
+      punches.unshift({
+        id: 'punch-' + Date.now(),
+        empId: activeUser.id,
+        employeeCode: activeUser.employeeCode,
+        fullName: activeUser.fullName,
+        department: activeUser.department,
+        branchName: activeUser.branchName || 'Headquarters - Technology Campus',
+        punchType: punchType,
+        time: timeStr,
+        date: todayStr,
+        timestamp: new Date().toISOString(),
+        status: activeUser.status || 'PRESENT',
+        distanceFromOfficeMeters: 12.4,
+        verified: true
+      });
+      saveSharedPunches(punches);
+
+      // Render UI updates
+      renderPunchTimes();
+      playSuccessChime();
+      showPunchToast(
+        punchType === 'CHECK_IN' ? 'Check-In Verified' : 'Check-Out Verified',
+        timeStr,
+        `${activeUser.fullName} (${activeUser.employeeCode}) • Headquarters Geofence (12m)`
+      );
+
+      // Send background API call if backend is running
       try {
-        const res = await fetch(`${API_BASE}/api/v1/attendance/punch`, {
+        fetch(`${API_BASE}/api/v1/attendance/punch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        const timeStr = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
-
-        if (res.ok && data.success) {
-          // Properly capture Check-In vs Check-Out timestamp in state
-          if (punchType === 'CHECK_IN') {
-            lastCheckInTime = timeStr;
-            document.getElementById('cardPresent').innerText = '01';
-            document.getElementById('cardAbsent').innerText = '00';
-          } else if (punchType === 'CHECK_OUT') {
-            lastCheckOutTime = timeStr;
-          }
-
-          // Conditionally render updated timestamps on UI
-          renderPunchTimes();
-
-          logConsole(`✅ [200 Verified] ${data.message} (${Math.round(data.distanceFromOfficeMeters)}m from office).`);
-          alert(`Success! ${punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} verified at ${timeStr}.`);
-        } else {
-          logConsole(`❌ [403 Rejected] [${data.rejectionReason}]: ${data.message}`);
-          alert(`Punch Rejected!\nReason: ${data.rejectionReason}\n${data.message}`);
-          refreshMobileData();
-        }
-      } catch (err) {
-        logConsole(`⚠️ Network error: ${err.message}. Enqueuing locally.`);
-        offlineQueue.push({ ...payload, localId: 'off-' + Date.now() });
-        updatePendingBadge();
-      }
+          body: JSON.stringify({
+            officeId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+            empId: activeUser.id,
+            employeeCode: activeUser.employeeCode,
+            punchType: punchType,
+            accuracyMeters: 6.4,
+            clientTimestamp: new Date().toISOString(),
+            deviceId: 'DEV-S23-ULTRA-SECURE',
+            isMockProvider: false,
+            latitude: 31.52045,
+            longitude: 74.35874
+          })
+        }).catch(() => {});
+      } catch (err) {}
     }
 
     // Sync Offline Queue
@@ -3729,7 +4193,15 @@
       }
 
       renderCuratedThemes();
-      renderPunchTimes();
+
+      // Check authenticated user session
+      const active = getActiveMobileUser();
+      if (active) {
+        showAppForUser(active);
+      } else {
+        mobileLogout();
+      }
+
       refreshMobileData();
       fetchAndRenderSummaryData();
       fetchAndRenderRecordsData();

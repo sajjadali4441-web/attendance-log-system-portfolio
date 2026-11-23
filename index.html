@@ -1234,6 +1234,15 @@
           </div>
         </div>
 
+        <!-- Mobile App Authentication Setup -->
+        <div class="p-3 bg-teal-50/70 border border-teal-200 rounded-xl space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-teal-900 text-xs">Mobile App PIN / Password *</label>
+            <span class="text-[10px] text-teal-700 font-semibold">For Mobile Check-In Authentication</span>
+          </div>
+          <input type="text" id="newEmpPassword" value="123456" placeholder="Enter PIN/Password (default: 123456)" required class="w-full bg-white border border-teal-200 rounded-xl px-3 py-2 font-bold text-teal-900" />
+        </div>
+
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
           <button type="button" onclick="closeModalAddEmployee()" class="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
           <button type="submit" id="btnSubmitAddEmployee" class="px-5 py-2 bg-[#0F9D91] hover:bg-teal-700 text-white rounded-xl font-bold transition shadow-sm active:scale-95">Register Employee</button>
@@ -1398,21 +1407,58 @@
     };
 
     // =========================================================================
-    // STANDALONE / GITHUB PAGES OFFLINE DEMO INTERCEPTOR
+    // STANDALONE / GITHUB PAGES OFFLINE DEMO INTERCEPTOR & PERSISTENT DATA
     // =========================================================================
     const originalFetch = window.fetch;
-    const demoEmployees = [
-      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 8472911', basicSalary: 320000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: '05:15 PM' },
-      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 321 4455667', basicSalary: 350000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: '05:10 PM' },
-      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 333 5566778', basicSalary: 280000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null },
-      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 301 6677889', basicSalary: 260000, employmentStatus: 'ACTIVE', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null },
-      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 345 7788990', basicSalary: 240000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null },
-      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 1122334', basicSalary: 220000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave' },
-      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 312 2233445', basicSalary: 340000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave' },
-      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 334 3344556', basicSalary: 210000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
-      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 300 9988776', basicSalary: 160000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null },
-      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', branchName: 'Headquarters - Tech Campus', contactNumber: '+92 322 8877665', basicSalary: 190000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null }
+    const STORAGE_KEY_EMPLOYEES = 'als_shared_employees';
+    const STORAGE_KEY_PUNCHES = 'als_shared_punches';
+
+    const defaultDemoEmployees = [
+      { id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a', employeeCode: 'AK-8924', fullName: 'Sajjad Ali', email: 'sajjad.ali@als.enterprise.com', jobTitle: 'Senior Product Designer', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 8472911', basicSalary: 320000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:05 AM', checkOutTime: '05:15 PM', password: '123' },
+      { id: 'usr-ahmed-khan-002', employeeCode: 'TC-1002', fullName: 'Ahmed Khan', email: 'ahmed.khan@als.enterprise.com', jobTitle: 'Lead Mobile Architect', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 321 4455667', basicSalary: 350000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:52 AM', checkOutTime: '05:10 PM', password: '123' },
+      { id: 'usr-fatima-zahra-003', employeeCode: 'TC-1003', fullName: 'Fatima Zahra', email: 'fatima.zahra@als.enterprise.com', jobTitle: 'Senior Backend Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 333 5566778', basicSalary: 280000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:08 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-bilal-hassan-004', employeeCode: 'TC-1004', fullName: 'Bilal Hassan', email: 'bilal.hassan@als.enterprise.com', jobTitle: 'Cloud & DevOps Engineer', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 301 6677889', basicSalary: 260000, employmentStatus: 'ACTIVE', status: 'LATE', statusLabel: 'Late', indicatorColor: 'orange', checkInTime: '09:42 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-mustafa-qureshi-005', employeeCode: 'TC-1005', fullName: 'Mustafa Qureshi', email: 'mustafa.qureshi@als.enterprise.com', jobTitle: 'Security Systems Specialist', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 345 7788990', basicSalary: 240000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '08:45 AM', checkOutTime: null, password: '123' },
+      { id: 'usr-zainab-malik-006', employeeCode: 'PD-2001', fullName: 'Zainab Malik', email: 'zainab.malik@als.enterprise.com', jobTitle: 'UI/UX Interaction Designer', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 1122334', basicSalary: 220000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Annual Leave', password: '123' },
+      { id: 'usr-ayesha-siddiqui-007', employeeCode: 'PD-2002', fullName: 'Ayesha Siddiqui', email: 'ayesha.siddiqui@als.enterprise.com', jobTitle: 'Senior Product Manager', department: 'Product Design & UX', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 312 2233445', basicSalary: 340000, employmentStatus: 'ACTIVE', status: 'ON_LEAVE', statusLabel: 'On Leave', indicatorColor: 'blue', checkInTime: null, checkOutTime: null, leaveType: 'Sick Leave', password: '123' },
+      { id: 'usr-usman-tariq-008', employeeCode: 'QA-3001', fullName: 'Usman Tariq', email: 'usman.tariq@als.enterprise.com', jobTitle: 'QA Automation Lead', department: 'Technology & Engineering', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 334 3344556', basicSalary: 210000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null, password: '123' },
+      { id: 'usr-hamza-sheikh-009', employeeCode: 'OP-4001', fullName: 'Hamza Sheikh', email: 'hamza.sheikh@als.enterprise.com', jobTitle: 'Operations & Logistics Associate', department: 'Operations & Logistics', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 300 9988776', basicSalary: 160000, employmentStatus: 'ACTIVE', status: 'NOT_CHECKED_IN', statusLabel: 'Not Checked In', indicatorColor: 'red', checkInTime: null, checkOutTime: null, password: '123' },
+      { id: 'usr-mariam-noor-010', employeeCode: 'HR-5001', fullName: 'Mariam Noor', email: 'mariam.noor@als.enterprise.com', jobTitle: 'People Operations Specialist', department: 'Human Resources', branchName: 'Headquarters - Technology Campus', contactNumber: '+92 322 8877665', basicSalary: 190000, employmentStatus: 'ACTIVE', status: 'PRESENT', statusLabel: 'Present', indicatorColor: 'green', checkInTime: '09:00 AM', checkOutTime: null, password: '123' }
     ];
+
+    function getSharedEmployees() {
+      const raw = localStorage.getItem(STORAGE_KEY_EMPLOYEES);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch(e) {}
+      }
+      localStorage.setItem(STORAGE_KEY_EMPLOYEES, JSON.stringify(defaultDemoEmployees));
+      return [...defaultDemoEmployees];
+    }
+
+    function saveSharedEmployees(list) {
+      localStorage.setItem(STORAGE_KEY_EMPLOYEES, JSON.stringify(list));
+    }
+
+    function getSharedPunches() {
+      const raw = localStorage.getItem(STORAGE_KEY_PUNCHES);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        } catch(e) {}
+      }
+      return [];
+    }
+
+    function saveSharedPunches(list) {
+      localStorage.setItem(STORAGE_KEY_PUNCHES, JSON.stringify(list));
+    }
+
+    // Proxy variable for backward compatibility
+    let demoEmployees = getSharedEmployees();
 
     const demoLeaves = [
       { id: 'leave-1', employeeName: 'Zainab Malik', employeeCode: 'PD-2001', department: 'Product Design & UX', leaveType: 'Annual Leave', startDate: '2026-11-19', endDate: '2026-11-21', status: 'APPROVED', reason: 'Scheduled personal annual leave' },
@@ -1466,17 +1512,40 @@
       let payload = { success: true };
 
       if (u.includes('/api/v1/hrms/dashboard')) {
+        const emps = getSharedEmployees();
+        const totalEmployees = emps.length;
+        const presentToday = emps.filter(e => e.status === 'PRESENT').length;
+        const lateArrivalsToday = emps.filter(e => e.status === 'LATE').length;
+        const absentToday = emps.filter(e => e.status === 'ABSENT' || e.status === 'NOT_CHECKED_IN').length;
+        const onLeaveToday = emps.filter(e => e.status === 'ON_LEAVE').length;
+        const pendingLeaveRequests = demoLeaves.filter(l => l.status === 'PENDING').length;
+        const pendingLoanApplications = demoLoans.filter(l => l.status === 'PENDING').length;
+        const totalMonthlyPayroll = demoPayroll.reduce((acc, r) => acc + (r.grossSalary || r.basicSalary || 0), 0);
+
+        const recent = [
+          ...getSharedPunches().slice(0, 3).map(p => ({
+            user: p.fullName,
+            action: `${p.punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} (${p.status})`,
+            time: p.time,
+            icon: p.punchType === 'CHECK_IN' ? 'fa-fingerprint' : 'fa-right-from-bracket',
+            color: p.status === 'LATE' ? 'text-amber-500' : 'text-emerald-500'
+          })),
+          { user: 'Sajjad Ali', action: 'Biometric Verified Punch', time: '09:05 AM', icon: 'fa-fingerprint', color: 'text-emerald-500' },
+          { user: 'Bilal Hassan', action: 'Late Check-in Recorded', time: '09:42 AM', icon: 'fa-clock', color: 'text-amber-500' },
+          { user: 'Zainab Malik', action: 'Approved Annual Leave', time: 'Yesterday', icon: 'fa-plane', color: 'text-blue-500' }
+        ].slice(0, 4);
+
         payload = {
           success: true,
           data: {
-            totalEmployees: 10,
-            presentToday: 5,
-            lateArrivalsToday: 1,
-            absentToday: 2,
-            onLeaveToday: 2,
-            pendingLeaveRequests: 1,
-            pendingLoanApplications: 1,
-            totalMonthlyPayroll: 2840000,
+            totalEmployees,
+            presentToday,
+            lateArrivalsToday,
+            absentToday,
+            onLeaveToday,
+            pendingLeaveRequests,
+            pendingLoanApplications,
+            totalMonthlyPayroll,
             monthlyAttendanceTrends: [
               { month: 'Jun', presentAvg: 90, lateAvg: 6, absentAvg: 4 },
               { month: 'Jul', presentAvg: 93, lateAvg: 4, absentAvg: 3 },
@@ -1486,29 +1555,25 @@
               { month: 'Nov', presentAvg: 92, lateAvg: 5, absentAvg: 3 }
             ],
             departmentAttendance: [
-              { department: 'Product Design & UX', present: 1, total: 3, late: 0, presentRate: 33 },
-              { department: 'Technology & Engineering', present: 3, total: 5, late: 1, presentRate: 60 },
-              { department: 'Human Resources', present: 1, total: 1, late: 0, presentRate: 100 },
-              { department: 'Operations & Logistics', present: 0, total: 1, late: 0, presentRate: 0 }
+              { department: 'Product Design & UX', present: emps.filter(e => e.department === 'Product Design & UX' && e.status === 'PRESENT').length, total: Math.max(emps.filter(e => e.department === 'Product Design & UX').length, 1), late: emps.filter(e => e.department === 'Product Design & UX' && e.status === 'LATE').length, presentRate: 75 },
+              { department: 'Technology & Engineering', present: emps.filter(e => e.department === 'Technology & Engineering' && e.status === 'PRESENT').length, total: Math.max(emps.filter(e => e.department === 'Technology & Engineering').length, 1), late: emps.filter(e => e.department === 'Technology & Engineering' && e.status === 'LATE').length, presentRate: 80 },
+              { department: 'Human Resources', present: emps.filter(e => e.department === 'Human Resources' && e.status === 'PRESENT').length, total: Math.max(emps.filter(e => e.department === 'Human Resources').length, 1), late: 0, presentRate: 100 },
+              { department: 'Operations & Logistics', present: emps.filter(e => e.department === 'Operations & Logistics' && e.status === 'PRESENT').length, total: Math.max(emps.filter(e => e.department === 'Operations & Logistics').length, 1), late: 0, presentRate: 50 }
             ],
             upcomingHolidays: [
               { title: 'Quaid-e-Azam Day', date: '2026-12-25', daysLeft: '35 days' },
               { title: 'New Year Day', date: '2027-01-01', daysLeft: '42 days' }
             ],
-            recentActivities: [
-              { user: 'Sajjad Ali', action: 'Biometric Verified Punch', time: '09:05 AM', icon: 'fa-fingerprint', color: 'text-emerald-500' },
-              { user: 'Bilal Hassan', action: 'Late Check-in Recorded', time: '09:42 AM', icon: 'fa-clock', color: 'text-amber-500' },
-              { user: 'Zainab Malik', action: 'Approved Annual Leave', time: 'Yesterday', icon: 'fa-plane', color: 'text-blue-500' }
-            ]
+            recentActivities: recent
           }
         };
       } else if (u.includes('/api/v1/attendance/manager-monitoring')) {
-        let list = [...demoEmployees];
+        let list = getSharedEmployees();
         if (u.includes('department=') && !u.includes('department=ALL')) {
           const match = u.match(/department=([^&]+)/);
           if (match) {
             const dept = decodeURIComponent(match[1]);
-            list = list.filter(e => e.department.toLowerCase() === dept.toLowerCase());
+            list = list.filter(e => (e.department || '').toLowerCase() === dept.toLowerCase());
           }
         }
         if (u.includes('status=') && !u.includes('status=ALL')) {
@@ -1518,21 +1583,63 @@
             list = list.filter(e => e.status === st);
           }
         }
+        const allList = getSharedEmployees();
         payload = {
           success: true,
-          date: '2026-11-19',
-          metrics: { totalEmployees: 10, present: 5, late: 1, notCheckedIn: 2, absent: 2, onLeave: 2 },
-          departments: ['Human Resources', 'Operations & Logistics', 'Product Design & UX', 'Technology & Engineering'],
+          date: globalSelectedDate,
+          metrics: {
+            totalEmployees: allList.length,
+            present: allList.filter(e => e.status === 'PRESENT').length,
+            late: allList.filter(e => e.status === 'LATE').length,
+            notCheckedIn: allList.filter(e => e.status === 'NOT_CHECKED_IN').length,
+            absent: allList.filter(e => e.status === 'ABSENT').length,
+            onLeave: allList.filter(e => e.status === 'ON_LEAVE').length
+          },
+          departments: ['Product Design & UX', 'Technology & Engineering', 'Human Resources', 'Operations & Logistics'],
           employees: list,
           data: { employees: list }
         };
       } else if (u.includes('/api/v1/hrms/employees')) {
-        let list = [...demoEmployees];
+        let list = getSharedEmployees();
+        if (options && options.method === 'POST') {
+          let newEmp = {};
+          try {
+            newEmp = typeof options.body === 'string' ? JSON.parse(options.body) : (options.body || {});
+          } catch(e) {}
+          newEmp.id = 'usr-' + (newEmp.employeeCode || Date.now()).toLowerCase();
+          newEmp.status = 'NOT_CHECKED_IN';
+          newEmp.statusLabel = 'Not Checked In';
+          newEmp.indicatorColor = 'red';
+          newEmp.employmentStatus = newEmp.employmentStatus || 'ACTIVE';
+          newEmp.password = newEmp.password || '123456';
+          newEmp.checkInTime = null;
+          newEmp.checkOutTime = null;
+          list.push(newEmp);
+          saveSharedEmployees(list);
+          return new Response(JSON.stringify({ success: true, data: newEmp }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+        if (u.includes('/status') && options && options.method === 'PUT') {
+          const match = u.match(/\/employees\/([^\/]+)\/status/);
+          if (match) {
+            const emp = list.find(e => e.id === match[1]);
+            if (emp) {
+              emp.employmentStatus = emp.employmentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+              saveSharedEmployees(list);
+              return new Response(JSON.stringify({ success: true, data: emp }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+          }
+        }
         if (u.includes('department=') && !u.includes('department=ALL')) {
           const match = u.match(/department=([^&]+)/);
           if (match) {
             const dept = decodeURIComponent(match[1]);
-            list = list.filter(e => e.department.toLowerCase() === dept.toLowerCase());
+            list = list.filter(e => (e.department || '').toLowerCase() === dept.toLowerCase());
           }
         }
         if (u.includes('search=')) {
@@ -1543,12 +1650,66 @@
           }
         }
         payload = { success: true, data: list };
+      } else if (u.includes('/api/v1/attendance/punch')) {
+        let body = {};
+        try { body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body || {}; } catch(e){}
+        const timeStr = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
+        const todayStr = new Date().toISOString().split('T')[0];
+        const list = getSharedEmployees();
+        const emp = list.find(e => e.id === body.empId || e.employeeCode === body.employeeCode) || list[0];
+        const punchType = body.punchType || 'CHECK_IN';
+
+        if (emp) {
+          if (punchType === 'CHECK_IN') {
+            emp.checkInTime = timeStr;
+            emp.status = 'PRESENT';
+            emp.statusLabel = 'Present';
+            emp.indicatorColor = 'green';
+          } else {
+            emp.checkOutTime = timeStr;
+          }
+          saveSharedEmployees(list);
+        }
+
+        const punches = getSharedPunches();
+        punches.unshift({
+          id: 'punch-' + Date.now(),
+          empId: emp ? emp.id : 'emp-unknown',
+          employeeCode: emp ? emp.employeeCode : 'TC-1001',
+          fullName: emp ? emp.fullName : 'Employee',
+          department: emp ? emp.department : 'General',
+          branchName: emp ? (emp.branchName || 'Headquarters') : 'Headquarters',
+          punchType: punchType,
+          time: timeStr,
+          date: todayStr,
+          timestamp: new Date().toISOString(),
+          status: punchType === 'CHECK_IN' ? 'PRESENT' : 'CHECKED_OUT',
+          distanceFromOfficeMeters: 12.4,
+          verified: true
+        });
+        saveSharedPunches(punches);
+
+        payload = {
+          success: true,
+          message: `${punchType === 'CHECK_IN' ? 'Check-In' : 'Check-Out'} recorded successfully inside Geofence`,
+          distanceFromOfficeMeters: 12.4,
+          punchType: punchType,
+          timestamp: new Date().toISOString()
+        };
       } else if (u.includes('/api/v1/hrms/holidays')) {
         payload = { success: true, data: demoHolidays };
       } else if (u.includes('/api/v1/hrms/reports/employee')) {
         const empIdMatch = u.match(/\/employee\/([^\/?]+)/);
         const targetId = empIdMatch ? empIdMatch[1] : '';
-        const emp = demoEmployees.find(e => e.id === targetId) || demoEmployees[0];
+        const list = getSharedEmployees();
+        const emp = list.find(e => e.id === targetId || e.employeeCode === targetId) || list[0];
+        const punches = getSharedPunches().filter(p => p.empId === emp.id || p.employeeCode === emp.employeeCode);
+        const todayPunch = punches.find(p => p.date === '2026-11-19' || p.date === new Date().toISOString().split('T')[0]);
+
+        const checkInVal = emp.checkInTime || (todayPunch ? todayPunch.time : null);
+        const checkOutVal = emp.checkOutTime || null;
+        const statusVal = emp.status === 'PRESENT' ? 'Present' : emp.status === 'LATE' ? 'Late' : emp.status === 'ON_LEAVE' ? 'Approved Leave' : (checkInVal ? 'Present' : 'Absent');
+
         payload = {
           success: true,
           data: {
@@ -1557,10 +1718,10 @@
             toDate: '2026-11-19',
             attendanceStats: {
               totalWorkingDays: 15,
-              totalPresentDays: 14,
-              presentRate: 93,
-              totalLateArrivals: 1,
-              totalAbsentDays: 0
+              totalPresentDays: checkInVal ? 15 : 14,
+              presentRate: checkInVal ? 100 : 93,
+              totalLateArrivals: emp.status === 'LATE' ? 2 : 1,
+              totalAbsentDays: checkInVal ? 0 : 1
             },
             leaveStats: {
               balances: {
@@ -1578,7 +1739,7 @@
               outstandingBalance: emp.id === 'usr-bilal-hassan-004' ? 125000 : 0
             },
             dailyRecords: [
-              { date: '2026-11-19', day: 'Thursday', checkIn: emp.checkInTime || '09:00 AM', checkOut: '05:15 PM', status: emp.status === 'LATE' ? 'Late' : emp.status === 'ON_LEAVE' ? 'Approved Leave' : 'Present', variance: emp.status === 'LATE' ? '+42m' : '+5m' },
+              { date: '2026-11-19', day: 'Thursday', checkIn: checkInVal || '—', checkOut: checkOutVal || '—', status: statusVal, variance: emp.status === 'LATE' ? '+42m' : (checkInVal ? '+5m' : '—') },
               { date: '2026-11-18', day: 'Wednesday', checkIn: '08:58 AM', checkOut: '05:08 PM', status: 'Present', variance: '-2m' },
               { date: '2026-11-17', day: 'Tuesday', checkIn: '09:02 AM', checkOut: '05:20 PM', status: 'Present', variance: '+2m' },
               { date: '2026-11-16', day: 'Monday', checkIn: '08:55 AM', checkOut: '05:00 PM', status: 'Present', variance: '-5m' },
@@ -1646,6 +1807,16 @@
 
       // Start background polling every 30s
       startAutoRefresh();
+
+      // Real-time synchronization when Mobile App records a punch or registers user in another tab
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY_EMPLOYEES || e.key === STORAGE_KEY_PUNCHES) {
+          if (currentView === 'dashboard') loadDashboard();
+          else if (currentView === 'attendance') loadAttendanceMonitoring();
+          else if (currentView === 'employees') loadEmployees();
+          else if (currentView === 'reports') loadEmployeeReport();
+        }
+      });
     });
 
     /**
@@ -2953,6 +3124,7 @@
         jobTitle: document.getElementById('newEmpTitle').value.trim(),
         basicSalary: Number(document.getElementById('newEmpSalary').value),
         branchName: document.getElementById('newEmpBranch').value,
+        password: (document.getElementById('newEmpPassword')?.value || '123456').trim(),
         employmentStatus: 'ACTIVE',
       };
 
@@ -2964,7 +3136,7 @@
         });
         const json = await res.json();
         if (json.success) {
-          showToast(`Employee ${payload.fullName} registered successfully!`, 'success');
+          showToast(`Employee ${payload.fullName} (${payload.employeeCode}) registered! Ready for mobile login.`, 'success');
           closeModalAddEmployee();
           loadEmployees();
           loadDashboard();
